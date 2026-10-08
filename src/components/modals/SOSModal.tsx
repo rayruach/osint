@@ -34,7 +34,7 @@ export default function SOSModal({ open, onClose, showToast, onBroadcast, curren
       });
       if (!res.ok) { showToast("Failed to broadcast SOS.", "error"); return; }
       if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(`[EMERGENCY] SOS: ${sosType}`, { body: `${location} — Immediate response requested.` });
+        new Notification(`[EMERGENCY] SOS: ${sosType}`, { body: `${location} - Immediate response requested.` });
       }
       showToast("Emergency SOS broadcasted.", "error");
       onBroadcast();

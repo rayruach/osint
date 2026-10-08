@@ -51,12 +51,6 @@ export default function PostCard({ post, onConfirmToggle, showToast }: Props) {
 
   const badgeIsSOS = post.badge === "Emergency SOS";
 
-  const STATUS_STYLE: Record<string, { cls: string; label: string }> = {
-    "Active":   { cls: "bg-red-600 text-white",          label: "Active" },
-    "Resolved": { cls: "bg-slate-600 text-slate-200",    label: "Resolved" },
-  };
-  const statusStyle = STATUS_STYLE[post.status] ?? { cls: "bg-slate-700 text-slate-300", label: post.status };
-
   return (
     <>
       <article
@@ -83,11 +77,6 @@ export default function PostCard({ post, onConfirmToggle, showToast }: Props) {
           {badgeIsSOS && (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-red-600 text-white border border-red-400 animate-pulse">
               ACTIVE SOS
-            </span>
-          )}
-          {!badgeIsSOS && (
-            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${statusStyle.cls}`}>
-              {statusStyle.label}
             </span>
           )}
         </div>

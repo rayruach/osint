@@ -12,17 +12,7 @@ import { useToast } from "@/hooks/useToast";
 import { useUser } from "@/hooks/useUser";
 import type { Post } from "@/types";
 
-const STATUS_META: Record<string, { color: string; label: string }> = {
-  "Active Alert":        { color: "text-red-400",    label: "ACTIVE" },
-  "Verified":            { color: "text-emerald-400", label: "VERIFIED" },
-  "Under Verification":  { color: "text-amber-400",   label: "UNVERIFIED" },
-  "Dispatched":          { color: "text-sky-400",     label: "DISPATCHED" },
-  "Emergency SOS":       { color: "text-red-500",     label: "SOS" },
-};
-
 function LiveTicker({ posts }: { posts: Post[] }) {
-  const activeCount = posts.filter((p) => p.status === "Active" || p.badge === "Emergency SOS").length;
-
   // Build ticker items from real posts — duplicate for seamless loop
   const items = posts.length > 0 ? [...posts, ...posts] : [];
 
@@ -40,8 +30,7 @@ function LiveTicker({ posts }: { posts: Post[] }) {
         </div>
 
         {/* Scrolling track */}
-        <div className="flex-1 overflow-hidden relative">
-          {/* fade edges */}
+        <div className="flex-1 overflow-hidden relative">          {/* fade edges */}
           <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-slate-900 to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none" />
 
@@ -55,13 +44,8 @@ function LiveTicker({ posts }: { posts: Post[] }) {
               style={{ animation: "ticker-scroll 40s linear infinite" }}
             >
               {items.map((post, i) => {
-                const meta = STATUS_META[post.badge === "Emergency SOS" ? "Emergency SOS" : post.status] ?? STATUS_META["Under Verification"];
                 return (
                   <span key={`${post.id}-${i}`} className="flex items-center gap-2 px-4 shrink-0">
-                    {/* status tag */}
-                    <span className={`text-[10px] font-bold tracking-wider shrink-0 ${meta.color}`}>
-                      {meta.label}
-                    </span>
                     {/* title */}
                     <span className="text-xs text-slate-200 font-medium whitespace-nowrap">
                       {post.title}
@@ -78,15 +62,6 @@ function LiveTicker({ posts }: { posts: Post[] }) {
             </div>
           )}
         </div>
-
-        {/* Alert count */}
-        {activeCount > 0 && (
-          <div className="flex items-center px-3 border-l border-slate-800 shrink-0 bg-slate-950">
-            <span className="text-[10px] font-bold text-red-400 whitespace-nowrap">
-              {activeCount} ACTIVE
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

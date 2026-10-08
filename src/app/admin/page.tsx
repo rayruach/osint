@@ -229,8 +229,8 @@ function ViewModal({ report, onClose, onApprove, onReject }: {
             onChange={(e) => setIncidentStatus(e.target.value)}
             className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 focus:outline-none focus:border-emerald-500 transition"
           >
-            <option value="Active">🔴 Active — Ongoing threat, citizens must act</option>
-            <option value="Resolved">⚫ Resolved — Incident closed / no longer active</option>
+            <option value="Active">Active - Ongoing threat, citizens must act</option>
+            <option value="Resolved">Resolved - Incident closed / no longer active</option>
           </select>
           <p className="text-[10px] text-slate-500">This status will be applied to the public post when you approve.</p>
         </div>
