@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  ein          String   @unique
+  fullName     String
+  phone        String   @unique
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  posts        Post[]
+  confirmations PostConfirmation[]
+
+  @@map("users")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  authorId    String?
+  authorName  String
+  badge       String   @default("Public")   // "Authorities" | "News" | "Public"
+  sourceUrl   String?
+  status      String   @default("Under Verification") // "Active Alert" | "Verified" | "Under Verification" | "Dispatched"
+  title       String
+  body        String
+  location    String
+  state       String
+  lga         String
+  town        String
+  mediaUrl    String?
+  isSensitive Boolean  @default(false)
+  isSOS       Boolean  @default(false)
+  isPushed    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author       User?              @relation(fields: [authorId], references: [id])
+  confirmations PostConfirmation[]
+
+  @@map("posts")
+}
+
+model PostConfirmation {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("post_confirmations")
+}
+
+model AdminReport {
+  id          String   @id @default(cuid())
+  contact     String
+  category    String
+  title       String
+  body        String
+  location    String
+  state       String
+  source      String   @default("Public")
+  mediaUrl    String?
+  status      String   @default("Pending")  // "Pending" | "Approved" | "Rejected"
+  bountyPaid  Boolean  @default(false)
+  confirmations Int    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("admin_reports")
+}
