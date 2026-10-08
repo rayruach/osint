@@ -18,7 +18,7 @@ export async function GET() {
     // Category distribution
     const catCounts: Record<string, number> = {};
     const stateCounts: Record<string, number> = {};
-    reports.forEach((r) => {
+    reports.forEach((r: { category: string; state: string; confirmations: number }) => {
       catCounts[r.category] = (catCounts[r.category] ?? 0) + 1;
       stateCounts[r.state] = (stateCounts[r.state] ?? 0) + 1;
     });
