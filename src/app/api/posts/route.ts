@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import type { Post } from "@prisma/client";
+
+type PostWithCount = Post & { _count: { confirmations: number } };
 
 export async function GET(req: NextRequest) {
   try {
@@ -44,13 +47,13 @@ export async function GET(req: NextRequest) {
     let confirmedIds: string[] = [];
     if (session) {
       const userConfirmations = await prisma.postConfirmation.findMany({
-        where: { userId: session.userId, postId: { in: posts.map((p) => p.id) } },
+        where: { userId: session.userId, postId: { in: posts.map((p: PostWithCount) => p.id) } },
         select: { postId: true },
       });
-      confirmedIds = userConfirmations.map((c) => c.postId);
+      confirmedIds = userConfirmations.map((c: { postId: string }) => c.postId);
     }
 
-    const enriched = posts.map((p) => ({
+    const enriched = posts.map((p: PostWithCount) => ({
       ...p,
       confirmations: p._count.confirmations,
       isConfirmed: confirmedIds.includes(p.id),
@@ -92,7 +95,7 @@ export async function POST(req: NextRequest) {
           town,
           mediaUrl: mediaUrl ?? null,
           isSensitive: isSensitive ?? false,
-          status: "Under Verification",
+          status: "Active",
         },
       }),
       prisma.adminReport.create({

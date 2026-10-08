@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         town: location,
         isSOS: true,
         isPushed: true,
-        status: "Active Alert",
+        status: "Active",
       },
     });
 
