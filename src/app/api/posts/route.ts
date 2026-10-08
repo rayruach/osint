@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import type { Post } from "@prisma/client";
 
-type PostWithCount = Post & { _count: { confirmations: number } };
+type PostWithCount = {
+  id: string;
+  authorId: string | null;
+  authorName: string;
+  badge: string;
+  sourceUrl: string | null;
+  status: string;
+  title: string;
+  body: string;
+  location: string;
+  state: string;
+  lga: string;
+  town: string;
+  mediaUrl: string | null;
+  isSensitive: boolean;
+  isSOS: boolean;
+  isPushed: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  _count: { confirmations: number };
+};
 
 export async function GET(req: NextRequest) {
   try {
