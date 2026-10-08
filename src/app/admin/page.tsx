@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import ToastContainer from "@/components/ToastContainer";
 import ActionToast from "@/components/ActionToast";
 import Modal from "@/components/Modal";
 import { useToast } from "@/hooks/useToast";
 import { nigeriaStates, getLGAs } from "@/lib/nigeria-locations";
-import type { AdminReport, Analytics } from "@/types";
+import type { AdminReport, Analytics, SosAlert } from "@/types";
 
-type View = "analytics" | "reports";
+type View = "analytics" | "reports" | "emergencies";
 type DeleteTarget = { id: string; title: string } | null;
 
 /* ─── helpers ─────────────────────────────────────────── */
@@ -410,9 +411,76 @@ function CreatePostModal({ onClose, onCreated, showToast }: {
   );
 }
 
+/* ─── SOS View Modal ──────────────────────────────────── */
+function SosViewModal({ alert, onClose }: { alert: SosAlert; onClose: () => void }) {
+  return (
+    <Modal open onClose={onClose}>
+      <div className="flex items-center justify-between border-b border-slate-800 pb-3 pr-8">
+        <div className="flex items-center space-x-2">
+          <span className="relative flex h-2.5 w-2.5">
+            {alert.status === "Ongoing" && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />}
+            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${alert.status === "Ongoing" ? "bg-red-500" : "bg-slate-500"}`} />
+          </span>
+          <h3 className="text-sm font-bold text-white">SOS: {alert.sosType}</h3>
+        </div>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${alert.status === "Ongoing" ? "bg-red-600 text-white" : "bg-slate-700 text-slate-300"}`}>
+          {alert.status}
+        </span>
+      </div>
+      <div className="bg-slate-950 border border-slate-800 rounded-xl divide-y divide-slate-800/60 text-xs">
+        {[
+          { label: "Sender", val: alert.fullName ?? "Unknown", icon: "fa-user" },
+          { label: "EIN", val: alert.ein ?? "N/A", icon: "fa-id-badge", mono: true, color: "text-emerald-400" },
+          { label: "Phone", val: alert.phone ?? "N/A", icon: "fa-phone", mono: true },
+          { label: "Time Sent", val: new Date(alert.createdAt).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }), icon: "fa-clock" },
+          { label: "Location", val: alert.location, icon: "fa-location-dot", color: "text-red-400" },
+        ].map(({ label, val, icon, mono, color }) => (
+          <div key={label} className="flex items-center justify-between px-3 py-2.5">
+            <div className="flex items-center space-x-2 text-slate-400">
+              <i className={`fa-solid ${icon} text-[10px] w-3`} />
+              <span>{label}</span>
+            </div>
+            <span className={`${mono ? "font-mono" : ""} ${color ?? "text-slate-200"} font-medium text-right max-w-[200px] truncate`}>{val}</span>
+          </div>
+        ))}
+        {alert.latitude && alert.longitude && (
+          <div className="flex items-center justify-between px-3 py-2.5">
+            <div className="flex items-center space-x-2 text-slate-400">
+              <i className="fa-solid fa-crosshairs text-[10px] w-3" />
+              <span>GPS Coords</span>
+            </div>
+            <a
+              href={`https://maps.google.com/?q=${alert.latitude},${alert.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-sky-400 hover:text-sky-300 text-[10px] transition"
+            >
+              {alert.latitude.toFixed(5)}, {alert.longitude.toFixed(5)} ↗
+            </a>
+          </div>
+        )}
+        {alert.resolvedAt && (
+          <div className="flex items-center justify-between px-3 py-2.5">
+            <div className="flex items-center space-x-2 text-slate-400">
+              <i className="fa-solid fa-check-double text-[10px] w-3" />
+              <span>Resolved At</span>
+            </div>
+            <span className="text-slate-400 text-[11px]">{new Date(alert.resolvedAt).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}</span>
+          </div>
+        )}
+      </div>
+      <div className="flex justify-end pt-2 border-t border-slate-800">
+        <button onClick={onClose} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition">Close</button>
+      </div>
+    </Modal>
+  );
+}
+
 /* ─── Main Admin Page ─────────────────────────────────── */
 export default function AdminPage() {
+  const router = useRouter();
   const { toasts, showToast, removeToast } = useToast();
+  const [authChecked, setAuthChecked] = useState(false);
   const [view, setView] = useState<View>("analytics");
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [reports, setReports] = useState<AdminReport[]>([]);
@@ -424,6 +492,23 @@ export default function AdminPage() {
   const [editReport, setEditReport] = useState<AdminReport | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
+
+  // SOS state
+  const [sosAlerts, setSosAlerts] = useState<SosAlert[]>([]);
+  const [viewSos, setViewSos] = useState<SosAlert | null>(null);
+  const [sosDeleteTarget, setSosDeleteTarget] = useState<DeleteTarget>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me").then((r) => r.json()).then((data) => {
+      if (!data.isAdmin) router.replace("/admin/login");
+      else setAuthChecked(true);
+    });
+  }, [router]);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/admin/login");
+  };
 
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " WAT");
@@ -452,7 +537,34 @@ export default function AdminPage() {
   useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
   useEffect(() => { if (view === "reports") fetchReports(); }, [view, fetchReports]);
 
-  const refresh = () => { fetchAnalytics(); if (view === "reports") fetchReports(); showToast("Admin data refreshed.", "info"); };
+  const fetchSos = useCallback(async () => {
+    const res = await fetch("/api/admin/sos");
+    const data = await res.json();
+    setSosAlerts(data.alerts ?? []);
+  }, []);
+
+  useEffect(() => { fetchSos(); }, [fetchSos]);
+  useEffect(() => { if (view === "emergencies") fetchSos(); }, [view, fetchSos]);
+
+  const handleSosStatus = async (id: string, status: "Ongoing" | "Resolved") => {
+    await fetch(`/api/admin/sos/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    showToast(`SOS marked as ${status}.`, status === "Resolved" ? "success" : "info");
+    fetchSos();
+  };
+
+  const handleSosDelete = async (id: string) => {
+    await fetch(`/api/admin/sos/${id}`, { method: "DELETE" });
+    showToast("SOS alert deleted.", "info");
+    setSosDeleteTarget(null);
+    fetchSos();
+  };
+
+  const refresh = () => {
+    fetchAnalytics();
+    if (view === "reports") fetchReports();
+    if (view === "emergencies") fetchSos();
+    showToast("Admin data refreshed.", "info");
+  };
 
   const handleApprove = async (id: string, incidentStatus = "Verified") => {
     await fetch(`/api/admin/reports/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "Approved", incidentStatus }) });
@@ -488,6 +600,17 @@ export default function AdminPage() {
 
   const pendingCount = analytics?.pending ?? 0;
 
+  if (!authChecked) {
+    return (
+      <div className="h-screen bg-slate-950 flex items-center justify-center">
+        <span className="relative flex h-3 w-3">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex overflow-hidden font-sans antialiased bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white">
 
@@ -501,7 +624,7 @@ export default function AdminPage() {
                 <span className="font-bold text-sm tracking-tight text-white font-mono">OSINT<span className="text-emerald-400">.NG</span></span>
                 <span className="text-[9px] font-mono px-1.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold uppercase">ADMIN</span>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono">Incident Desk & Intel</p>
+              <p className="text-[10px] text-slate-400 font-mono">Admin Panel</p>
             </div>
           </div>
         </div>
@@ -510,7 +633,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11px]">
             <div className="flex items-center space-x-2">
               <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" /></span>
-              <span className="text-slate-300 font-medium">Desk Feed Active</span>
+              <span className="text-slate-300 font-medium">System Online</span>
             </div>
             <span className="text-[10px] font-mono text-slate-500">{clock}</span>
           </div>
@@ -526,15 +649,30 @@ export default function AdminPage() {
             <div className="flex items-center space-x-3"><i className="fa-solid fa-list-check text-sm" /><span>Manage Reports</span></div>
             {pendingCount > 0 && <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">{pendingCount}</span>}
           </button>
+          <button onClick={() => setView("emergencies")} className={navBtn(view === "emergencies")}>
+            <div className="flex items-center space-x-3"><i className="fa-solid fa-triangle-exclamation text-sm" /><span>Manage Emergency</span></div>
+            {sosAlerts.filter((s) => s.status === "Ongoing").length > 0 && (
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-bold animate-pulse">
+                {sosAlerts.filter((s) => s.status === "Ongoing").length}
+              </span>
+            )}
+          </button>
         </nav>
 
         <div className="p-4 border-t border-slate-800/80 bg-slate-950/40">
           <div className="flex items-center space-x-3">
             <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-mono text-xs font-bold">OS</div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-200">Duty Officer Alpha</p>
-              <p className="text-[10px] text-slate-400 font-mono truncate">desk_alpha@osint.ng</p>
+              <p className="text-xs font-semibold text-slate-200">Admin</p>
+              <p className="text-[10px] text-slate-400 font-mono truncate">admin@osint.ng</p>
             </div>
+            <button
+              onClick={handleLogout}
+              title="Sign out"
+              className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-red-950/60 border border-slate-700 hover:border-red-800/60 text-slate-400 hover:text-red-400 flex items-center justify-center transition shrink-0"
+            >
+              <i className="fa-solid fa-right-from-bracket text-xs" />
+            </button>
           </div>
         </div>
       </aside>
@@ -544,8 +682,8 @@ export default function AdminPage() {
         {/* Top Bar */}
         <header className="h-16 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-6 flex items-center justify-between shrink-0">
           <div>
-            <h1 className="text-base font-bold text-white">{view === "analytics" ? "Summary & Analytics" : "Manage Reports"}</h1>
-            <p className="text-[11px] text-slate-400">{view === "analytics" ? "Real-time intelligence overview & reward disbursement metrics" : "Audit, approve payouts, and edit incoming field alerts"}</p>
+            <h1 className="text-base font-bold text-white">{view === "analytics" ? "Summary & Analytics" : view === "reports" ? "Manage Reports" : "Manage Emergency"}</h1>
+            <p className="text-[11px] text-slate-400">{view === "analytics" ? "Overview of reports and reward disbursements" : view === "reports" ? "Review, approve and manage incoming reports" : "Monitor and respond to active SOS alerts"}</p>
           </div>
           <div className="flex items-center space-x-2">
             <button onClick={refresh} className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium flex items-center space-x-1.5 transition">
@@ -565,11 +703,11 @@ export default function AdminPage() {
               {/* KPI Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                 {[
-                  { label: "Total Inflow", val: analytics.total, color: "text-white", icon: "fa-inbox", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", trend: "+18% past 24h" },
+                  { label: "Total Inflow", val: analytics.total, color: "text-white", icon: "fa-inbox", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", trend: "Total reports received" },
                   { label: "Pending Review", val: analytics.pending, color: "text-amber-300", icon: "fa-clock-rotate-left", bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", trend: "Awaiting review" },
-                  { label: "Approved Reports", val: analytics.approved, color: "text-emerald-400", icon: "fa-circle-check", bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", trend: `${analytics.total ? Math.round((analytics.approved / analytics.total) * 100) : 0}% verification rate` },
-                  { label: "Bounties Paid", val: `₦${analytics.bountiesTotal.toLocaleString()}`, color: "text-purple-300", icon: "fa-money-bill-wave", bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", trend: `${analytics.approved} reporters rewarded` },
-                  { label: "Total Confirms", val: analytics.totalConfirms, color: "text-teal-300", icon: "fa-circle-check", bg: "bg-teal-500/10 border-teal-500/20 text-teal-400", trend: "Citizen corroborations" },
+                  { label: "Approved Reports", val: analytics.approved, color: "text-emerald-400", icon: "fa-circle-check", bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", trend: `${analytics.total ? Math.round((analytics.approved / analytics.total) * 100) : 0}% approval rate` },
+                  { label: "Bounties Paid", val: `₦${analytics.bountiesTotal.toLocaleString()}`, color: "text-purple-300", icon: "fa-money-bill-wave", bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", trend: `${analytics.approved} reporters paid` },
+                  { label: "Total Confirms", val: analytics.totalConfirms, color: "text-teal-300", icon: "fa-circle-check", bg: "bg-teal-500/10 border-teal-500/20 text-teal-400", trend: "Public confirmations" },
                 ].map(({ label, val, color, icon, bg, trend }) => (
                   <div key={label} className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
                     <div className="flex items-center justify-between">
@@ -589,14 +727,14 @@ export default function AdminPage() {
                 <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
                   <div className="border-b border-slate-800 pb-3">
                     <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider font-mono">Incident Categories</h3>
-                    <p className="text-[11px] text-slate-400">Distribution across verified and incoming alerts</p>
+                    <p className="text-[11px] text-slate-400">Breakdown by report category</p>
                   </div>
                   <BarChart items={analytics.categories} color="bg-gradient-to-r from-red-600 to-rose-500" />
                 </div>
                 <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
                   <div className="border-b border-slate-800 pb-3">
                     <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider font-mono">Top Alert Zones</h3>
-                    <p className="text-[11px] text-slate-400">State-level incident inflow concentration</p>
+                    <p className="text-[11px] text-slate-400">States with the most reports</p>
                   </div>
                   <BarChart items={analytics.states} color="bg-gradient-to-r from-emerald-500 to-teal-400" />
                 </div>
@@ -605,9 +743,9 @@ export default function AdminPage() {
               {/* Operational metrics */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { icon: "fa-stopwatch text-amber-400", label: "Avg Verification Time", val: "3.8 Minutes", desc: "From submit to OSINT verification checkmark." },
-                  { icon: "fa-users text-blue-400", label: "Field Corroboration Multiplier", val: "4.6 Confirms / Alert", desc: "Avg citizen confirmations per legitimate report." },
-                  { icon: "fa-hand-holding-dollar text-emerald-400", label: "First-Submitter Payout Success", val: "96.2% Disbursed", desc: "Verified reports with accurate contact received ₦500." },
+                  { icon: "fa-stopwatch text-amber-400", label: "Avg. Review Time", val: "3.8 Minutes", desc: "Average time from submission to approval decision." },
+                  { icon: "fa-users text-blue-400", label: "Avg. Confirmations", val: "4.6 per Report", desc: "Average number of public confirmations per approved report." },
+                  { icon: "fa-hand-holding-dollar text-emerald-400", label: "Bounty Payout Rate", val: "96.2%", desc: "Share of approved reports where bounty was successfully paid." },
                 ].map(({ icon, label, val, desc }) => (
                   <div key={label} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-2">
                     <div className="flex items-center space-x-2 text-slate-400 text-xs"><i className={`fa-solid ${icon}`} /><span className="font-medium">{label}</span></div>
@@ -677,7 +815,6 @@ export default function AdminPage() {
                           <td className="py-3 px-4 font-mono font-bold text-slate-300">#{i + 1}</td>
                           <td className="py-3 px-4">
                             <div className="font-mono text-emerald-400 font-semibold flex items-center space-x-1.5"><i className="fa-solid fa-user-shield text-[10px] text-slate-500" /><span>{r.contact}</span></div>
-                            <span className="text-[10px] text-slate-500 font-mono">{r.id}</span>
                           </td>
                           <td className="py-3 px-4 font-mono text-[11px] text-slate-300 whitespace-nowrap">{timeAgo(r.createdAt)}</td>
                           <td className="py-3 px-4 max-w-xs">
@@ -712,6 +849,94 @@ export default function AdminPage() {
                 <div className="px-4 py-3 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
                   <div>Showing <span className="font-bold text-slate-200 font-mono">{filteredReports.length}</span> of <span className="font-bold text-slate-200 font-mono">{reports.length}</span> reports</div>
                   <span className="inline-flex items-center space-x-1 text-emerald-400 font-medium text-[11px]"><i className="fa-solid fa-circle-check text-[10px]" /><span>₦500 bounty paid on approval</span></span>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* ── Emergencies View ── */}
+          {view === "emergencies" && (
+            <div className="space-y-4">
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-mono text-[11px] uppercase tracking-wider">
+                      <tr>
+                        <th className="py-3 px-4 w-12">S/N</th>
+                        <th className="py-3 px-4">Sender</th>
+                        <th className="py-3 px-4">Emergency</th>
+                        <th className="py-3 px-4">Location</th>
+                        <th className="py-3 px-4">Time</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      {sosAlerts.length === 0 ? (
+                        <tr><td colSpan={7} className="text-center py-10 text-slate-500">
+                          <i className="fa-solid fa-shield-halved text-2xl mb-2 block text-slate-700" />
+                          No SOS alerts on record.
+                        </td></tr>
+                      ) : sosAlerts.map((s, i) => (
+                        <tr key={s.id} className={`hover:bg-slate-800/40 transition ${s.status === "Ongoing" ? "bg-red-950/10" : ""}`}>
+                          <td className="py-3 px-4 font-mono font-bold text-slate-300">#{i + 1}</td>
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-slate-100">{s.fullName ?? "Unknown"}</div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="font-mono text-emerald-400 text-[10px]">{s.ein ?? "N/A"}</span>
+                              <span className="text-slate-500 text-[10px]">{s.phone ?? ""}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-semibold text-red-400">{s.sosType}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center space-x-1 max-w-[160px]">
+                              <i className="fa-solid fa-location-dot text-red-500 text-[10px] shrink-0" />
+                              <span className="truncate">{s.location}</span>
+                            </div>
+                            {s.latitude && s.longitude && (
+                              <a href={`https://maps.google.com/?q=${s.latitude},${s.longitude}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-400 hover:text-sky-300 font-mono mt-0.5 block">
+                                View on map ↗
+                              </a>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 font-mono text-[11px] whitespace-nowrap text-slate-300">
+                            {timeAgo(s.createdAt)}
+                          </td>
+                          <td className="py-3 px-4">
+                            <select
+                              value={s.status}
+                              onChange={(e) => handleSosStatus(s.id, e.target.value as "Ongoing" | "Resolved")}
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border bg-slate-950 focus:outline-none transition cursor-pointer ${
+                                s.status === "Ongoing"
+                                  ? "text-red-400 border-red-500/40"
+                                  : "text-slate-400 border-slate-700"
+                              }`}
+                            >
+                              <option value="Ongoing">Ongoing</option>
+                              <option value="Resolved">Resolved</option>
+                            </select>
+                          </td>
+                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center space-x-1">
+                              <button onClick={() => setViewSos(s)} title="View" className="w-7 h-7 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition">
+                                <i className="fa-solid fa-eye text-xs" />
+                              </button>
+                              <button onClick={() => setSosDeleteTarget({ id: s.id, title: `${s.sosType} by ${s.fullName ?? "Unknown"}` })} title="Delete" className="w-7 h-7 rounded-lg bg-slate-950 hover:bg-red-950/60 border border-slate-800 text-red-400 flex items-center justify-center transition">
+                                <i className="fa-solid fa-trash text-xs" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="px-4 py-3 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                  <span>Total: <span className="font-bold text-slate-200 font-mono">{sosAlerts.length}</span></span>
+                  <span className="text-red-400 font-medium">
+                    {sosAlerts.filter((s) => s.status === "Ongoing").length} ongoing
+                  </span>
                 </div>
               </div>
             </div>
@@ -754,6 +979,19 @@ export default function AdminPage() {
         />
       )}
 
+      {viewSos && (
+        <SosViewModal alert={viewSos} onClose={() => setViewSos(null)} />
+      )}
+      {sosDeleteTarget && (
+        <ActionToast
+          message={`Delete SOS alert?`}
+          subtitle={`Permanently remove "${sosDeleteTarget.title}"?`}
+          confirmText="Delete"
+          confirmColor="bg-red-600 hover:bg-red-500"
+          onConfirm={() => handleSosDelete(sosDeleteTarget.id)}
+          onCancel={() => setSosDeleteTarget(null)}
+        />
+      )}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );

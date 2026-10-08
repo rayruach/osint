@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       ein: user.ein,
       email: user.email,
-      isAdmin: false,
+      isAdmin: user.isAdmin,
     });
 
     const cookieStore = await cookies();

@@ -4,12 +4,12 @@ import { prisma } from "@/lib/db";
 
 export async function GET() {
   const session = await getSession();
-  if (!session) return NextResponse.json({ user: null });
+  if (!session) return NextResponse.json({ user: null, isAdmin: false });
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, fullName: true, email: true, phone: true, ein: true, createdAt: true },
+    select: { id: true, fullName: true, email: true, phone: true, ein: true, isAdmin: true, createdAt: true },
   });
 
-  return NextResponse.json({ user });
+  return NextResponse.json({ user, isAdmin: session.isAdmin });
 }

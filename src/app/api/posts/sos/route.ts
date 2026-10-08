@@ -5,30 +5,37 @@ import { getSession } from "@/lib/auth";
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
-    const { sosType, location } = await req.json();
+    if (!session) {
+      return NextResponse.json({ error: "You must be logged in to send an SOS." }, { status: 401 });
+    }
+
+    const { sosType, location, latitude, longitude } = await req.json();
 
     if (!sosType || !location) {
       return NextResponse.json({ error: "SOS type and location required." }, { status: 400 });
     }
 
-    const post = await prisma.post.create({
+    // Fetch user details for prefill storage
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { fullName: true, phone: true, ein: true },
+    });
+
+    const alert = await prisma.sosAlert.create({
       data: {
-        authorId: session?.userId ?? null,
-        authorName: "Emergency SOS Beacon",
-        badge: "Emergency SOS",
-        title: `SOS: ${sosType}`,
-        body: `Immediate emergency response requested at ${location}. Priority SOS beacon active.`,
+        userId: session.userId,
+        ein: user?.ein ?? null,
+        phone: user?.phone ?? null,
+        fullName: user?.fullName ?? null,
+        sosType,
         location,
-        state: "Emergency",
-        lga: "Emergency",
-        town: location,
-        isSOS: true,
-        isPushed: true,
-        status: "Active",
+        latitude: latitude ?? null,
+        longitude: longitude ?? null,
+        status: "Ongoing",
       },
     });
 
-    return NextResponse.json({ post }, { status: 201 });
+    return NextResponse.json({ alert }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/posts/sos]", err);
     return NextResponse.json({ error: "Failed to broadcast SOS." }, { status: 500 });

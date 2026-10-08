@@ -65,6 +65,12 @@ export default function ReportModal({ open, onClose, showToast, onSubmitted, def
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!incidentType) { showToast("Please select an incident type.", "error"); return; }
+    if (!contact) { showToast("Please enter your email or phone.", "error"); return; }
+    if (!state) { showToast("Please select a state.", "error"); return; }
+    if (!lga) { showToast("Please select an LGA.", "error"); return; }
+    if (!town) { showToast("Please enter the town or area.", "error"); return; }
+    if (!description) { showToast("Please describe what happened.", "error"); return; }
     setLoading(true);
     try {
       const res = await fetch("/api/posts", {

@@ -46,6 +46,22 @@ export interface User {
   createdAt: string;
 }
 
+export interface SosAlert {
+  id: string;
+  userId: string | null;
+  ein: string | null;
+  phone: string | null;
+  fullName: string | null;
+  sosType: string;
+  location: string;
+  latitude: number | null;
+  longitude: number | null;
+  status: "Ongoing" | "Resolved";
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Analytics {
   total: number;
   pending: number;

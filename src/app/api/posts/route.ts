@@ -90,8 +90,9 @@ export async function POST(req: NextRequest) {
     const session = await getSession();
     const body = await req.json();
     const { title, incidentType, contact, state, lga, town, description, mediaUrl, isSensitive } = body;
+    const resolvedTitle = incidentType || title;
 
-    if (!title || !state || !lga || !town || !description) {
+    if (!resolvedTitle || !state || !lga || !town || !description) {
       return NextResponse.json({ error: "Required fields missing." }, { status: 400 });
     }
 
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
           authorId: session?.userId ?? null,
           authorName,
           badge: "Public",
-          title: incidentType ?? title,
+          title: resolvedTitle,
           body: description,
           location: locationString,
           state,
@@ -121,7 +122,7 @@ export async function POST(req: NextRequest) {
         data: {
           contact: contact ?? session?.email ?? "anonymous",
           category: incidentType ?? title,
-          title: incidentType ?? title,
+          title: resolvedTitle,
           body: description,
           location: locationString,
           state,

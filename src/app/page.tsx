@@ -7,6 +7,7 @@ import ToastContainer from "@/components/ToastContainer";
 import ReportModal from "@/components/modals/ReportModal";
 import SOSModal from "@/components/modals/SOSModal";
 import RegisterModal from "@/components/modals/RegisterModal";
+import ClientDashboard from "@/components/modals/ClientDashboard";
 import LoginModal from "@/components/modals/LoginModal";
 import { useToast } from "@/hooks/useToast";
 import { useUser } from "@/hooks/useUser";
@@ -36,7 +37,7 @@ function LiveTicker({ posts }: { posts: Post[] }) {
 
           {posts.length === 0 ? (
             <div className="flex items-center h-full px-4 py-2.5">
-              <span className="text-xs text-slate-500 italic">Fetching intelligence feed...</span>
+              <span className="text-xs text-slate-500 italic">Loading feed...</span>
             </div>
           ) : (
             <div
@@ -69,7 +70,7 @@ function LiveTicker({ posts }: { posts: Post[] }) {
 
 export default function FeedPage() {
   const { toasts, showToast, removeToast } = useToast();
-  const { user, refresh: refreshUser } = useUser();
+  const { user, refresh: refreshUser, logout } = useUser();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,11 +80,10 @@ export default function FeedPage() {
 
   const [showSearch, setShowSearch] = useState(false);
   const [showLocationCard, setShowLocationCard] = useState(false);
-  const [showAdvisory, setShowAdvisory] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const [modal, setModal] = useState<"report" | "sos" | "register" | "login" | null>(null);
+  const [modal, setModal] = useState<"report" | "sos" | "register" | "login" | "dashboard" | null>(null);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -158,8 +158,8 @@ export default function FeedPage() {
   };
 
   const handleUserClick = () => {
-    if (user) { showToast(`Active OSINT Account: ${user.fullName} | EIN: ${user.ein}`, "info"); return; }
-    setModal("register");
+    if (user) { setModal("dashboard"); return; }
+    setModal("login");
   };
 
   return (
@@ -167,6 +167,7 @@ export default function FeedPage() {
       <Navbar
         user={user}
         onSearchToggle={() => setShowSearch((v) => !v)}
+        onLocate={handleLocate}
         onUserClick={handleUserClick}
         onSOSClick={() => setModal("sos")}
         onPushToggle={handlePushToggle}
@@ -182,30 +183,21 @@ export default function FeedPage() {
         {/* Search Panel (toggle from navbar) */}
         {showSearch && (
           <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-2.5 px-3 shadow-xl">
-            <div className="flex items-center justify-between gap-2">
-              <div className="relative flex-1">
-                <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search incidents, tags, locations..."
-                  autoFocus
-                  className="w-full bg-slate-950 text-slate-100 text-xs pl-8 pr-7 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 transition"
-                />
-                {search && (
-                  <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs">
-                    <i className="fa-solid fa-xmark" />
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={handleLocate}
-                className="bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white text-xs px-3.5 py-2 rounded-xl border border-slate-800 flex items-center space-x-1.5 transition shrink-0"
-              >
-                <i className="fa-solid fa-location-crosshairs text-emerald-400" />
-                <span>{currentGPS ? "Nnewi, Anambra ✓" : "Locate"}</span>
-              </button>
+            <div className="relative flex-1">
+              <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search incidents, locations..."
+                autoFocus
+                className="w-full bg-slate-950 text-slate-100 text-xs pl-8 pr-7 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 transition"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs">
+                  <i className="fa-solid fa-xmark" />
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -223,40 +215,23 @@ export default function FeedPage() {
               </button>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-slate-300 pt-0.5">
-              <div>
-                Safety Rating: <span className="font-semibold text-amber-400">Moderate Caution</span>
-                <span className="text-slate-400"> • based on recent violent crime reports</span>
+            <div className="pt-2.5 border-t border-slate-800 space-y-2.5 text-xs text-slate-300">
+              <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 space-y-1.5">
+                <div className="font-semibold text-slate-200 flex items-center space-x-1.5">
+                  <i className="fa-solid fa-shield-halved text-amber-400" />
+                  <span>Nnewi City Advisory</span>
+                </div>
+                <p className="text-slate-400 leading-relaxed">
+                  Several violent incidents confirmed in this area recently. Vigilante and police patrols are active. Caution advised when travelling the Nnewi–Ozubulu bypass after dark.
+                </p>
               </div>
-              <button
-                onClick={() => setShowAdvisory((v) => !v)}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition self-start sm:self-auto"
-              >
-                <i className="fa-regular fa-file-lines text-slate-400" />
-                <span>{showAdvisory ? "Hide City Advisory" : "View City Advisory"}</span>
-                <i className={`fa-solid fa-chevron-down text-[10px] ml-0.5 transition-transform ${showAdvisory ? "rotate-180" : ""}`} />
-              </button>
+              <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                <span className="text-slate-400">Emergency:</span>
+                <a href="tel:08033429811" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">Police: 0803 342 9811</a>
+                <a href="tel:08060001212" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">Vigilante: 0806 000 1212</a>
+                <a href="tel:08035438970" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">NAUTH: 0803 543 8970</a>
+              </div>
             </div>
-
-            {showAdvisory && (
-              <div className="pt-2.5 border-t border-slate-800 space-y-2.5 text-xs text-slate-300">
-                <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 space-y-1.5">
-                  <div className="font-semibold text-slate-200 flex items-center space-x-1.5">
-                    <i className="fa-solid fa-shield-halved text-amber-400" />
-                    <span>Nnewi City Advisory</span>
-                  </div>
-                  <p className="text-slate-400 leading-relaxed">
-                    Several violent incidents confirmed in this area recently. Vigilante and police patrols are active. Caution advised when travelling the Nnewi–Ozubulu bypass after dark.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                  <span className="text-slate-400">Emergency:</span>
-                  <a href="tel:08033429811" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">Police: 0803 342 9811</a>
-                  <a href="tel:08060001212" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">Vigilante: 0806 000 1212</a>
-                  <a href="tel:08035438970" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">NAUTH: 0803 543 8970</a>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -323,7 +298,8 @@ export default function FeedPage() {
         onClose={() => setModal(null)}
         showToast={showToast}
         onBroadcast={fetchPosts}
-        currentLocation={currentGPS}
+        user={user}
+        onLoginRequired={() => setModal("login")}
       />
       <RegisterModal
         open={modal === "register"}
@@ -331,14 +307,22 @@ export default function FeedPage() {
         onSwitchToLogin={() => setModal("login")}
         showToast={showToast}
         onRegistered={refreshUser}
-      />
-      <LoginModal
+      />      <LoginModal
         open={modal === "login"}
         onClose={() => setModal(null)}
         onSwitchToRegister={() => setModal("register")}
         showToast={showToast}
         onLoggedIn={refreshUser}
       />
+      {user && (
+        <ClientDashboard
+          open={modal === "dashboard"}
+          user={user}
+          onClose={() => setModal(null)}
+          onLogout={() => { logout(); setModal(null); }}
+          showToast={showToast}
+        />
+      )}
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
