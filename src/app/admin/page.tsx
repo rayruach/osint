@@ -552,6 +552,7 @@ export default function AdminPage() {
   const [viewReport, setViewReport] = useState<AdminReport | null>(null);
   const [editReport, setEditReport] = useState<AdminReport | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
 
   // SOS state
@@ -681,8 +682,14 @@ export default function AdminPage() {
   return (
     <div className="h-screen flex overflow-hidden font-sans antialiased bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white">
 
+      {/* ── Mobile sidebar overlay ── */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* ── Sidebar ── */}
-      <aside className="w-64 bg-slate-900/95 border-r border-slate-800/80 flex flex-col shrink-0">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900/95 border-r border-slate-800/80 flex flex-col shrink-0 transition-transform duration-200
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:translate-x-0`}>
         <div className="h-16 flex items-center px-5 border-b border-slate-800/80">
           <div className="flex items-center space-x-2.5">
             <img src="/logo.png" alt="OSINT.NG" className="w-8 h-8 rounded-xl object-cover border border-emerald-500/30" />
@@ -708,15 +715,15 @@ export default function AdminPage() {
 
         <nav className="flex-1 px-3 py-3 space-y-1.5">
           <div className="px-3 pb-1 text-[10px] font-bold tracking-wider text-slate-500 uppercase font-mono">Operations</div>
-          <button onClick={() => setView("analytics")} className={navBtn(view === "analytics")}>
+          <button onClick={() => { setView("analytics"); setSidebarOpen(false); }} className={navBtn(view === "analytics")}>
             <div className="flex items-center space-x-3"><i className="fa-solid fa-chart-pie text-sm" /><span>Summary & Analytics</span></div>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Live</span>
           </button>
-          <button onClick={() => setView("reports")} className={navBtn(view === "reports")}>
+          <button onClick={() => { setView("reports"); setSidebarOpen(false); }} className={navBtn(view === "reports")}>
             <div className="flex items-center space-x-3"><i className="fa-solid fa-list-check text-sm" /><span>Manage Reports</span></div>
             {pendingCount > 0 && <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">{pendingCount}</span>}
           </button>
-          <button onClick={() => setView("emergencies")} className={navBtn(view === "emergencies")}>
+          <button onClick={() => { setView("emergencies"); setSidebarOpen(false); }} className={navBtn(view === "emergencies")}>
             <div className="flex items-center space-x-3"><i className="fa-solid fa-triangle-exclamation text-sm" /><span>Manage Emergency</span></div>
             {sosAlerts.filter((s) => s.status === "Ongoing").length > 0 && (
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-bold animate-pulse">
@@ -747,22 +754,31 @@ export default function AdminPage() {
       {/* ── Main Content ── */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Bar */}
-        <header className="h-16 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-6 flex items-center justify-between shrink-0">
-          <div>
-            <h1 className="text-base font-bold text-white">{view === "analytics" ? "Summary & Analytics" : view === "reports" ? "Manage Reports" : "Manage Emergency"}</h1>
-            <p className="text-[11px] text-slate-400">{view === "analytics" ? "Overview of reports and reward disbursements" : view === "reports" ? "Review, approve and manage incoming reports" : "Monitor and respond to active SOS alerts"}</p>
+        <header className="h-14 md:h-16 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-3 md:px-6 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            {/* Hamburger — mobile only */}
+            <button
+              onClick={() => setSidebarOpen((v) => !v)}
+              className="md:hidden w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center"
+            >
+              <i className="fa-solid fa-bars text-xs" />
+            </button>
+            <div>
+              <h1 className="text-sm md:text-base font-bold text-white">{view === "analytics" ? "Summary & Analytics" : view === "reports" ? "Manage Reports" : "Manage Emergency"}</h1>
+              <p className="text-[10px] md:text-[11px] text-slate-400 hidden sm:block">{view === "analytics" ? "Overview of reports and reward disbursements" : view === "reports" ? "Review, approve and manage incoming reports" : "Monitor and respond to active SOS alerts"}</p>
+            </div>
           </div>
           <div className="flex items-center space-x-2">
-            <button onClick={refresh} className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium flex items-center space-x-1.5 transition">
-              <i className="fa-solid fa-arrows-rotate text-xs" /><span>Refresh</span>
+            <button onClick={refresh} className="px-2 md:px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium flex items-center space-x-1.5 transition">
+              <i className="fa-solid fa-arrows-rotate text-xs" /><span className="hidden sm:inline">Refresh</span>
             </button>
-            <button onClick={exportCSV} className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium flex items-center space-x-1.5 transition">
-              <i className="fa-solid fa-file-arrow-down text-xs" /><span>Export CSV</span>
+            <button onClick={exportCSV} className="px-2 md:px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium flex items-center space-x-1.5 transition">
+              <i className="fa-solid fa-file-arrow-down text-xs" /><span className="hidden sm:inline">Export CSV</span>
             </button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6">
 
           {/* ── Analytics View ── */}
           {view === "analytics" && analytics && (
@@ -773,7 +789,7 @@ export default function AdminPage() {
                   { label: "Total Inflow", val: analytics.total, color: "text-white", icon: "fa-inbox", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", trend: "Total reports received" },
                   { label: "Pending Review", val: analytics.pending, color: "text-amber-300", icon: "fa-clock-rotate-left", bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", trend: "Awaiting review" },
                   { label: "Approved Reports", val: analytics.approved, color: "text-emerald-400", icon: "fa-circle-check", bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", trend: `${analytics.total ? Math.round((analytics.approved / analytics.total) * 100) : 0}% approval rate` },
-                  { label: "Bounties Paid", val: `₦${analytics.bountiesTotal.toLocaleString()}`, color: "text-purple-300", icon: "fa-money-bill-wave", bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", trend: `${analytics.approved} reporters paid` },
+                  { label: "Bounties Paid", val: `₦${(analytics.bountiesTotal ?? 0).toLocaleString()}`, color: "text-purple-300", icon: "fa-money-bill-wave", bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", trend: `${analytics.approved} reporters paid` },
                   { label: "Total Confirms", val: analytics.totalConfirms, color: "text-teal-300", icon: "fa-circle-check", bg: "bg-teal-500/10 border-teal-500/20 text-teal-400", trend: "Public confirmations" },
                 ].map(({ label, val, color, icon, bg, trend }) => (
                   <div key={label} className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
@@ -858,9 +874,9 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Table */}
+              {/* Table — desktop */}
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-mono text-[11px] uppercase tracking-wider">
                       <tr>
@@ -913,9 +929,55 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Cards — mobile */}
+                <div className="md:hidden divide-y divide-slate-800/60">
+                  {filteredReports.length === 0 ? (
+                    <div className="text-center py-10 text-slate-500">
+                      <i className="fa-solid fa-folder-open text-2xl mb-2 block" />No reports found.
+                    </div>
+                  ) : filteredReports.map((r) => (
+                    <div key={r.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm text-slate-100 leading-snug">{r.title}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">{r.category}</p>
+                        </div>
+                        <StatusBadge status={r.status} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div>
+                          <span className="text-slate-500">Sender</span>
+                          <p className="text-emerald-400 font-mono font-semibold truncate">{r.contact}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Location</span>
+                          <p className="text-slate-300 truncate">{r.location}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Date</span>
+                          <p className="text-slate-300">{timeAgo(r.createdAt)}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Confirms</span>
+                          <p className="text-slate-300 font-mono">{r.confirmations}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 pt-1 border-t border-slate-800/60">
+                        <button onClick={() => setViewReport(r)} className="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center gap-1.5 transition"><i className="fa-solid fa-eye text-[10px]" />View</button>
+                        <button onClick={() => setEditReport(r)} className="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-950/60 text-amber-400 text-xs flex items-center justify-center gap-1.5 transition"><i className="fa-solid fa-pen-to-square text-[10px]" />Edit</button>
+                        {r.status !== "Approved" && (
+                          <button onClick={() => handleApprove(r.id)} className="flex-1 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-400 text-xs flex items-center justify-center gap-1.5 transition"><i className="fa-solid fa-check text-[10px]" />Approve</button>
+                        )}
+                        <button onClick={() => setDeleteTarget({ id: r.id, title: r.title })} className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-red-950/60 text-red-400 flex items-center justify-center transition"><i className="fa-solid fa-trash text-xs" /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <div className="px-4 py-3 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                  <div>Showing <span className="font-bold text-slate-200 font-mono">{filteredReports.length}</span> of <span className="font-bold text-slate-200 font-mono">{reports.length}</span> reports</div>
-                  <span className="inline-flex items-center space-x-1 text-emerald-400 font-medium text-[11px]"><i className="fa-solid fa-circle-check text-[10px]" /><span>₦500 bounty paid on approval</span></span>
+                  <div>Showing <span className="font-bold text-slate-200 font-mono">{filteredReports.length}</span> of <span className="font-bold text-slate-200 font-mono">{reports.length}</span></div>
+                  <span className="hidden sm:inline-flex items-center space-x-1 text-emerald-400 font-medium text-[11px]"><i className="fa-solid fa-circle-check text-[10px]" /><span>₦500 bounty on approval</span></span>
                 </div>
               </div>
             </div>
@@ -923,8 +985,8 @@ export default function AdminPage() {
           {/* ── Emergencies View ── */}
           {view === "emergencies" && (
             <div className="space-y-4">
-              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-                <div className="overflow-x-auto">
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-mono text-[11px] uppercase tracking-wider">
                       <tr>
@@ -953,45 +1015,28 @@ export default function AdminPage() {
                               <span className="text-slate-500 text-[10px]">{s.phone ?? ""}</span>
                             </div>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className="font-semibold text-red-400">{s.sosType}</span>
-                          </td>
+                          <td className="py-3 px-4"><span className="font-semibold text-red-400">{s.sosType}</span></td>
                           <td className="py-3 px-4">
                             <div className="flex items-center space-x-1 max-w-[160px]">
                               <i className="fa-solid fa-location-dot text-red-500 text-[10px] shrink-0" />
                               <span className="truncate">{s.location}</span>
                             </div>
                             {s.latitude && s.longitude && (
-                              <a href={`https://maps.google.com/?q=${s.latitude},${s.longitude}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-400 hover:text-sky-300 font-mono mt-0.5 block">
-                                View on map ↗
-                              </a>
+                              <a href={`https://maps.google.com/?q=${s.latitude},${s.longitude}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-400 hover:text-sky-300 font-mono mt-0.5 block">View on map ↗</a>
                             )}
                           </td>
-                          <td className="py-3 px-4 font-mono text-[11px] whitespace-nowrap text-slate-300">
-                            {timeAgo(s.createdAt)}
-                          </td>
+                          <td className="py-3 px-4 font-mono text-[11px] whitespace-nowrap text-slate-300">{timeAgo(s.createdAt)}</td>
                           <td className="py-3 px-4">
-                            <select
-                              value={s.status}
-                              onChange={(e) => handleSosStatus(s.id, e.target.value as "Ongoing" | "Resolved")}
-                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border bg-slate-950 focus:outline-none transition cursor-pointer ${
-                                s.status === "Ongoing"
-                                  ? "text-red-400 border-red-500/40"
-                                  : "text-slate-400 border-slate-700"
-                              }`}
-                            >
+                            <select value={s.status} onChange={(e) => handleSosStatus(s.id, e.target.value as "Ongoing" | "Resolved")}
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border bg-slate-950 focus:outline-none transition cursor-pointer ${s.status === "Ongoing" ? "text-red-400 border-red-500/40" : "text-slate-400 border-slate-700"}`}>
                               <option value="Ongoing">Ongoing</option>
                               <option value="Resolved">Resolved</option>
                             </select>
                           </td>
                           <td className="py-3 px-4 text-right whitespace-nowrap">
                             <div className="inline-flex items-center space-x-1">
-                              <button onClick={() => setViewSos(s)} title="View" className="w-7 h-7 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition">
-                                <i className="fa-solid fa-eye text-xs" />
-                              </button>
-                              <button onClick={() => setSosDeleteTarget({ id: s.id, title: `${s.sosType} by ${s.fullName ?? "Unknown"}` })} title="Delete" className="w-7 h-7 rounded-lg bg-slate-950 hover:bg-red-950/60 border border-slate-800 text-red-400 flex items-center justify-center transition">
-                                <i className="fa-solid fa-trash text-xs" />
-                              </button>
+                              <button onClick={() => setViewSos(s)} className="w-7 h-7 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition"><i className="fa-solid fa-eye text-xs" /></button>
+                              <button onClick={() => setSosDeleteTarget({ id: s.id, title: `${s.sosType} by ${s.fullName ?? "Unknown"}` })} className="w-7 h-7 rounded-lg bg-slate-950 hover:bg-red-950/60 border border-slate-800 text-red-400 flex items-center justify-center transition"><i className="fa-solid fa-trash text-xs" /></button>
                             </div>
                           </td>
                         </tr>
@@ -999,11 +1044,46 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Cards — mobile */}
+                <div className="md:hidden divide-y divide-slate-800/60">
+                  {sosAlerts.length === 0 ? (
+                    <div className="text-center py-10 text-slate-500">
+                      <i className="fa-solid fa-shield-halved text-2xl mb-2 block text-slate-700" />No SOS alerts on record.
+                    </div>
+                  ) : sosAlerts.map((s) => (
+                    <div key={s.id} className={`p-4 space-y-3 ${s.status === "Ongoing" ? "bg-red-950/10" : ""}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-bold text-sm text-red-400">{s.sosType}</p>
+                          <p className="text-[11px] text-slate-300 mt-0.5">{s.fullName ?? "Unknown"}</p>
+                          <p className="text-[10px] text-emerald-400 font-mono">{s.ein ?? ""}</p>
+                        </div>
+                        <select value={s.status} onChange={(e) => handleSosStatus(s.id, e.target.value as "Ongoing" | "Resolved")}
+                          className={`text-[10px] font-bold px-2 py-1 rounded-lg border bg-slate-950 focus:outline-none ${s.status === "Ongoing" ? "text-red-400 border-red-500/40" : "text-slate-400 border-slate-700"}`}>
+                          <option value="Ongoing">Ongoing</option>
+                          <option value="Resolved">Resolved</option>
+                        </select>
+                      </div>
+                      <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <i className="fa-solid fa-location-dot text-red-500 text-[10px]" />
+                        <span>{s.location}</span>
+                      </div>
+                      {s.latitude && s.longitude && (
+                        <a href={`https://maps.google.com/?q=${s.latitude},${s.longitude}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-400 font-mono">View on map ↗</a>
+                      )}
+                      <div className="text-[10px] text-slate-500">{timeAgo(s.createdAt)}</div>
+                      <div className="flex items-center gap-2 pt-1 border-t border-slate-800/60">
+                        <button onClick={() => setViewSos(s)} className="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs flex items-center justify-center gap-1.5"><i className="fa-solid fa-eye text-[10px]" />View</button>
+                        <button onClick={() => setSosDeleteTarget({ id: s.id, title: `${s.sosType} by ${s.fullName ?? "Unknown"}` })} className="flex-1 py-1.5 rounded-lg bg-slate-800 text-red-400 text-xs flex items-center justify-center gap-1.5"><i className="fa-solid fa-trash text-[10px]" />Delete</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <div className="px-4 py-3 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
                   <span>Total: <span className="font-bold text-slate-200 font-mono">{sosAlerts.length}</span></span>
-                  <span className="text-red-400 font-medium">
-                    {sosAlerts.filter((s) => s.status === "Ongoing").length} ongoing
-                  </span>
+                  <span className="text-red-400 font-medium">{sosAlerts.filter((s) => s.status === "Ongoing").length} ongoing</span>
                 </div>
               </div>
             </div>

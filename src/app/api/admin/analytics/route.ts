@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { prisma, withRetry } from "@/lib/db";
 
 export async function GET() {
   try {
     const [total, pending, approved, rejected, totalConfirms, reports] =
-      await Promise.all([
+      await withRetry(() => Promise.all([
         prisma.adminReport.count(),
         prisma.adminReport.count({ where: { status: "Pending" } }),
         prisma.adminReport.count({ where: { status: "Approved" } }),
@@ -13,7 +13,7 @@ export async function GET() {
         prisma.adminReport.findMany({
           select: { category: true, state: true, confirmations: true },
         }),
-      ]);
+      ]));
 
     // Category distribution
     const catCounts: Record<string, number> = {};
