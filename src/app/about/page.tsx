@@ -127,7 +127,15 @@ export default function AboutPage() {
         </section>
 
         {/* Footer */}
-        <footer className="text-center text-xs text-slate-600 pb-4 space-y-1">
+        <footer className="text-center text-xs text-slate-600 pb-4 space-y-2">
+          <div className="border-t border-slate-800/60 pt-4 space-y-1">
+            <p className="text-slate-500 text-[11px]">
+              OSINT-NG is a joint initiative of
+            </p>
+            <p className="text-slate-400 font-medium">
+              ReyFund <span className="text-slate-600 font-normal">(Ruach & Zoe Nigeria)</span> &amp; Afribic Alliance
+            </p>
+          </div>
           <p>© {new Date().getFullYear()} OSINT-NG. All rights reserved.</p>
           <a href="/" className="text-slate-500 hover:text-emerald-400 transition inline-block">← Back to Feed</a>
         </footer>

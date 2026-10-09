@@ -3,7 +3,20 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "OSINT.NG | REYFUND",
-  description: "Real-time citizen intelligence & emergency incident reporting for Nigeria.",
+  description: "Open source intelligence Nigeria. 36 states + FCT",
+  authors: [{ name: "ReyFund (Ruach & Zoe Nigeria) & Afribic Alliance" }],
+  openGraph: {
+    title: "OSINT-NG",
+    description: "Open source intelligence Nigeria. 36 states + FCT",
+    siteName: "ReyFund (Ruach & Zoe Nigeria) & Afribic Alliance",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "OSINT-NG",
+    description: "Open source intelligence Nigeria. 36 states + FCT",
+    site: "@osintng",
+  },
 };
 
 export const viewport: Viewport = {
