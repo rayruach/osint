@@ -204,44 +204,32 @@ export default function ReportModal({ open, onClose, showToast, onSubmitted, def
               </svg>
             </div>
           </div>
-          <div className="space-y-1.5">
+
+          <div>
             <h3 className="text-base font-bold text-white">Report Submitted</h3>
-            <p className="text-xs text-emerald-400 font-medium">Awaiting OSINT Desk Verification</p>
+            <p className="text-xs text-slate-400 mt-1">Under review by the OSINT-NG desk.</p>
           </div>
 
           {refCode && (
-            <div className="bg-slate-950 border border-emerald-500/30 rounded-2xl p-4 space-y-2">
-              <p className="text-[11px] text-slate-400">Your claim code — save this to redeem your reward if selected:</p>
-              <div className="flex items-center justify-center space-x-2">
-                <span className="font-mono text-xl font-black text-white tracking-widest">{refCode}</span>
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 text-left">
+              <p className="text-xs text-slate-400">Your claim code:</p>
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-2xl font-black text-white tracking-widest">{refCode}</span>
                 <button
-                  onClick={() => { navigator.clipboard.writeText(refCode); showToast("Claim code copied.", "success"); }}
-                  className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition"
+                  onClick={() => { navigator.clipboard.writeText(refCode); showToast("Copied.", "success"); }}
+                  className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition"
                 >
                   <i className="fa-regular fa-copy text-xs" />
                 </button>
               </div>
-              <p className="text-[10px] text-slate-500 leading-relaxed">Log in to your account, go to dashboard, and paste this code under "Claim Reward" to add your bank details if your report is approved and selected for a bounty.</p>            </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed border-t border-slate-800 pt-2">
+                If your report is selected for a reward, log in, go to your dashboard and paste this code under <strong className="text-slate-300">Claim</strong> to add your bank details.
+              </p>
+            </div>
           )}
 
-          <div className="bg-amber-950/30 border border-amber-800/40 rounded-2xl p-3.5 text-left space-y-1.5">
-            <div className="flex items-center space-x-2">
-              <i className="fa-solid fa-triangle-exclamation text-amber-400 text-xs" />
-              <span className="text-xs font-bold text-amber-300">Create an account to claim your reward</span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed pl-5">
-              You will need an OSINT-NG account to submit your bank details and receive payment. Register or log in, then go to your dashboard and tap <strong className="text-white">Claim</strong> to redeem.
-            </p>
-          </div>
-
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-left text-xs text-slate-300 space-y-2">
-            <div className="flex items-start space-x-2">
-              <i className="fa-solid fa-clock-rotate-left text-amber-400 mt-0.5 shrink-0" />
-              <p className="text-[11px] leading-relaxed">Your submission is under review by our verification team.</p>
-            </div>
-          </div>
           <button type="button" onClick={handleClose} className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition">
-            Close & Return to Feed
+            Close
           </button>
         </div>
       )}
