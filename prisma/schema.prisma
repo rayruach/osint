@@ -54,13 +54,15 @@ model Post {
 model PostConfirmation {
   id        String   @id @default(cuid())
   postId    String
-  userId    String
+  userId    String?
+  deviceId  String?
   createdAt DateTime @default(now())
 
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([postId, userId])
+  @@unique([postId, deviceId])
   @@map("post_confirmations")
 }
 

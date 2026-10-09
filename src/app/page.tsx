@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
-import PostCard from "@/components/PostCard";
+import PostCard, { PostCardSkeleton } from "@/components/PostCard";
 import ToastContainer from "@/components/ToastContainer";
 import ReportModal from "@/components/modals/ReportModal";
 import SOSModal from "@/components/modals/SOSModal";
@@ -81,6 +81,7 @@ export default function FeedPage() {
   const [showSearch, setShowSearch] = useState(false);
   const [showLocationCard, setShowLocationCard] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushMuted, setPushMuted] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const [modal, setModal] = useState<"report" | "sos" | "register" | "login" | "dashboard" | null>(null);
@@ -90,6 +91,9 @@ export default function FeedPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (locationFilter) params.set("state", locationFilter);
+      // Pass device ID so server can restore confirmed state for anonymous visitors
+      const deviceId = localStorage.getItem("osint_device_id");
+      if (deviceId) params.set("deviceId", deviceId);
       const res = await fetch(`/api/posts?${params}`);
       const data = await res.json();
       setPosts(data.posts ?? []);
@@ -104,6 +108,7 @@ export default function FeedPage() {
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "granted") setPushEnabled(true);
+    if (localStorage.getItem("osint_push_muted") === "1") setPushMuted(true);
   }, []);
 
   useEffect(() => {
@@ -113,29 +118,69 @@ export default function FeedPage() {
   }, []);
 
   const handleConfirmToggle = async (id: string) => {
-    if (!user) { showToast("Log in to confirm a report.", "warning"); setModal("login"); return; }
-    const res = await fetch(`/api/posts/${id}/confirm`, { method: "POST" });
-    if (!res.ok) { showToast("Failed to update confirmation.", "error"); return; }
-    const data = await res.json();
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, isConfirmed: data.confirmed, confirmations: data.confirmations } : p
+    // Optimistic update — flip UI instantly
+    const prev = posts.find((p) => p.id === id);
+    if (!prev) return;
+    const optimisticConfirmed = !prev.isConfirmed;
+    const optimisticCount = prev.confirmations + (optimisticConfirmed ? 1 : -1);
+    setPosts((all) =>
+      all.map((p) =>
+        p.id === id ? { ...p, isConfirmed: optimisticConfirmed, confirmations: optimisticCount } : p
       )
     );
-    showToast(data.confirmed ? "Thanks! Your confirmation has been added." : "Your confirmation has been removed.", data.confirmed ? "success" : "info");
+
+    // Get or generate device ID
+    let deviceId = localStorage.getItem("osint_device_id");
+    if (!deviceId) {
+      deviceId = crypto.randomUUID();
+      localStorage.setItem("osint_device_id", deviceId);
+    }
+
+    // Sync with server in background
+    try {
+      const res = await fetch(`/api/posts/${id}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId }),
+      });
+      if (!res.ok) throw new Error("failed");
+      const data = await res.json();
+      // Reconcile with server count
+      setPosts((all) =>
+        all.map((p) =>
+          p.id === id ? { ...p, isConfirmed: data.confirmed, confirmations: data.confirmations } : p
+        )
+      );
+      if (data.confirmed) showToast("Thanks for confirming this report.", "success");
+    } catch {
+      // Revert on failure
+      setPosts((all) =>
+        all.map((p) =>
+          p.id === id ? { ...p, isConfirmed: prev.isConfirmed, confirmations: prev.confirmations } : p
+        )
+      );
+      showToast("Failed to update confirmation.", "error");
+    }
   };
 
   const handlePushToggle = async () => {
     if (!("Notification" in window)) { showToast("Notifications not supported in this browser.", "error"); return; }
-    if (Notification.permission === "granted") { showToast("Push Notifications are already active.", "info"); return; }
+    if (Notification.permission === "granted") {
+      // Toggle mute
+      const newMuted = !pushMuted;
+      setPushMuted(newMuted);
+      localStorage.setItem("osint_push_muted", newMuted ? "1" : "0");
+      showToast(newMuted ? "Notifications silenced." : "Notifications unmuted.", newMuted ? "info" : "success");
+      return;
+    }
     if (Notification.permission === "denied") { showToast("Enable notifications in browser site settings.", "warning"); return; }
     const perm = await Notification.requestPermission();
     if (perm === "granted") {
       setPushEnabled(true);
+      setPushMuted(false);
+      localStorage.setItem("osint_push_muted", "0");
       showToast("Push Notifications enabled!", "success");
       new Notification("OSINT.NG", { body: "You will receive emergency notifications." });
-    } else {
-      showToast("Notification permission was denied.", "warning");
     }
   };
 
@@ -165,13 +210,12 @@ export default function FeedPage() {
   return (
     <div className="min-h-full flex flex-col font-sans antialiased bg-slate-950 selection:bg-emerald-500 selection:text-white">
       <Navbar
-        user={user}
         onSearchToggle={() => setShowSearch((v) => !v)}
         onLocate={handleLocate}
-        onUserClick={handleUserClick}
         onSOSClick={() => setModal("sos")}
         onPushToggle={handlePushToggle}
         pushEnabled={pushEnabled}
+        pushMuted={pushMuted}
         showToast={showToast}
       />
 
@@ -245,8 +289,8 @@ export default function FeedPage() {
         {/* Feed */}
         <div className="space-y-4 pt-1">
           {loading ? (
-            <div className="text-center py-12">
-              <i className="fa-solid fa-circle-notch fa-spin text-emerald-400 text-2xl" />
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => <PostCardSkeleton key={i} />)}
             </div>
           ) : posts.length === 0 ? (
             <div className="text-center py-12 bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
@@ -274,6 +318,17 @@ export default function FeedPage() {
           className="w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white flex items-center justify-center shadow-2xl shadow-emerald-950/90 border-2 border-emerald-400/80 hover:border-emerald-300 transition-all hover:scale-105 group"
         >
           <i className="fa-solid fa-plus text-xl group-hover:rotate-90 transition-transform duration-200" />
+        </button>
+        <button
+          onClick={handleUserClick}
+          title={user ? `${user.fullName} | ${user.ein}` : "Login / Register"}
+          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-xl transition-all active:scale-95 ${
+            user
+              ? "bg-emerald-600/20 border-emerald-500/60 text-emerald-400 hover:bg-emerald-600/30"
+              : "bg-slate-900 border-slate-700 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50"
+          }`}
+        >
+          <i className={`fa-solid ${user ? "fa-user-check" : "fa-user"} text-xs`} />
         </button>
         {showScrollTop && (
           <button

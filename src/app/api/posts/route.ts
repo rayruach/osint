@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { prisma, withRetry } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 type PostWithCount = {
@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") ?? "";
     const state = searchParams.get("state") ?? "";
+    const deviceId = searchParams.get("deviceId") ?? "";
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = parseInt(searchParams.get("limit") ?? "20");
     const skip = (page - 1) * limit;
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
       ],
     };
 
-    const [posts, total] = await Promise.all([
+    const [posts, total] = await withRetry(() => Promise.all([
       prisma.post.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -59,17 +60,23 @@ export async function GET(req: NextRequest) {
         },
       }),
       prisma.post.count({ where }),
-    ]);
+    ]));
 
-    // Check which posts the current user has confirmed
+    // Check which posts the current user or device has confirmed
     const session = await getSession();
     let confirmedIds: string[] = [];
     if (session) {
-      const userConfirmations = await prisma.postConfirmation.findMany({
+      const userConfirmations = await withRetry(() => prisma.postConfirmation.findMany({
         where: { userId: session.userId, postId: { in: posts.map((p: PostWithCount) => p.id) } },
         select: { postId: true },
-      });
+      }));
       confirmedIds = userConfirmations.map((c: { postId: string }) => c.postId);
+    } else if (deviceId) {
+      const deviceConfirmations = await withRetry(() => prisma.postConfirmation.findMany({
+        where: { deviceId, postId: { in: posts.map((p: PostWithCount) => p.id) } },
+        select: { postId: true },
+      }));
+      confirmedIds = deviceConfirmations.map((c: { postId: string }) => c.postId);
     }
 
     const enriched = posts.map((p: PostWithCount) => ({

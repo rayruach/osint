@@ -3,12 +3,52 @@
 import { useState } from "react";
 import type { Post } from "@/types";
 import type { ToastType } from "@/hooks/useToast";
-import ActionToast from "./ActionToast";
 
 interface Props {
   post: Post;
   onConfirmToggle: (id: string) => void;
   showToast: (msg: string, type?: ToastType) => void;
+}
+
+export function PostCardSkeleton() {
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 animate-pulse">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-xl bg-slate-800" />
+          <div className="space-y-1.5">
+            <div className="h-2.5 w-24 bg-slate-800 rounded-full" />
+            <div className="h-2 w-16 bg-slate-800/60 rounded-full" />
+          </div>
+        </div>
+        <div className="h-5 w-14 bg-slate-800 rounded-lg" />
+      </div>
+      {/* Title */}
+      <div className="space-y-2">
+        <div className="h-3 w-full bg-slate-800 rounded-full" />
+        <div className="h-3 w-4/5 bg-slate-800 rounded-full" />
+      </div>
+      {/* Body */}
+      <div className="space-y-1.5">
+        <div className="h-2.5 w-full bg-slate-800/70 rounded-full" />
+        <div className="h-2.5 w-full bg-slate-800/70 rounded-full" />
+        <div className="h-2.5 w-3/4 bg-slate-800/70 rounded-full" />
+      </div>
+      {/* Image placeholder — shown ~50% of the time visually */}
+      <div className="h-40 w-full bg-slate-800/50 rounded-xl" />
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center space-x-1.5">
+          <div className="h-2 w-20 bg-slate-800/60 rounded-full" />
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="h-7 w-20 bg-slate-800 rounded-xl" />
+          <div className="h-7 w-7 bg-slate-800 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function timeAgo(dateStr: string): string {
@@ -23,16 +63,6 @@ function timeAgo(dateStr: string): string {
 
 export default function PostCard({ post, onConfirmToggle, showToast }: Props) {
   const [revealed, setRevealed] = useState(false);
-  const [action, setAction] = useState<null | "confirm" | "withdraw">(null);
-
-  const handleConfirmClick = () => {
-    setAction(post.isConfirmed ? "withdraw" : "confirm");
-  };
-
-  const handleConfirm = () => {
-    setAction(null);
-    onConfirmToggle(post.id);
-  };
 
   const handleShare = async () => {
     const url = `${window.location.origin}#${post.id}`;
@@ -152,7 +182,7 @@ export default function PostCard({ post, onConfirmToggle, showToast }: Props) {
         {/* Footer */}
         <div className="flex items-center justify-between pt-2.5 border-t border-slate-800/80 text-xs text-slate-400">
           <button
-            onClick={handleConfirmClick}
+            onClick={() => onConfirmToggle(post.id)}
             className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl border transition-all duration-150 select-none ${
               post.isConfirmed
                 ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 font-semibold"
@@ -176,27 +206,6 @@ export default function PostCard({ post, onConfirmToggle, showToast }: Props) {
         </div>
       </article>
 
-      {/* Confirmation action toast */}
-      {action === "confirm" && (
-        <ActionToast
-          message="Can you confirm this report?"
-          subtitle={`Did this incident really happen at ${post.location}? Tap confirm if you know it's true.`}
-          confirmText="Yes, I can confirm"
-          confirmColor="bg-emerald-600 hover:bg-emerald-500"
-          onConfirm={handleConfirm}
-          onCancel={() => setAction(null)}
-        />
-      )}
-      {action === "withdraw" && (
-        <ActionToast
-          message="Remove your confirmation?"
-          subtitle={`Take back your confirmation for the incident at ${post.location}?`}
-          confirmText="Yes, remove it"
-          confirmColor="bg-red-600 hover:bg-red-500"
-          onConfirm={handleConfirm}
-          onCancel={() => setAction(null)}
-        />
-      )}
     </>
   );
 }

@@ -1,28 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import type { User } from "@/types";
 import type { ToastType } from "@/hooks/useToast";
 
 interface Props {
-  user: User | null;
   onSearchToggle: () => void;
   onLocate: () => void;
-  onUserClick: () => void;
   onSOSClick: () => void;
   onPushToggle: () => void;
   pushEnabled: boolean;
+  pushMuted: boolean;
   showToast: (msg: string, type?: ToastType) => void;
 }
 
 export default function Navbar({
-  user,
   onSearchToggle,
   onLocate,
-  onUserClick,
   onSOSClick,
   onPushToggle,
   pushEnabled,
+  pushMuted,
 }: Props) {
   return (
     <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80">
@@ -59,26 +55,19 @@ export default function Navbar({
             <i className="fa-solid fa-location-crosshairs text-xs" />
           </button>
 
-          {/* User / Account */}
-          <button
-            onClick={onUserClick}
-            title={user ? `OSINT Account: ${user.fullName} | ${user.ein}` : "Register / Login"}
-            className={`w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-800 border transition flex items-center justify-center active:scale-95 shadow-sm ${
-              user
-                ? "border-emerald-500/60 text-emerald-400"
-                : "border-slate-700 text-slate-300 hover:text-emerald-400"
-            }`}
-          >
-            <i className={`fa-solid ${user ? "fa-user-check" : "fa-user"} text-xs`} />
-          </button>
-
           {/* Push Notifications */}
           <button
             onClick={onPushToggle}
-            title={pushEnabled ? "Push Alerts: Active" : "Push Alerts: Off"}
+            title={!pushEnabled ? "Enable notifications" : pushMuted ? "Notifications silenced - tap to unmute" : "Notifications active - tap to silence"}
             className="w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition flex items-center justify-center active:scale-95 shadow-sm"
           >
-            <i className={`fa-solid ${pushEnabled ? "fa-bell text-emerald-400" : "fa-bell-slash text-slate-400"} text-xs`} />
+            <i className={`fa-solid ${
+              !pushEnabled
+                ? "fa-bell-slash text-slate-400"
+                : pushMuted
+                ? "fa-bell-slash text-amber-400"
+                : "fa-bell text-emerald-400"
+            } text-xs`} />
           </button>
 
           {/* SOS */}
