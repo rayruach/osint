@@ -85,8 +85,10 @@ export default function FeedPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const [modal, setModal] = useState<"report" | "sos" | "register" | "login" | "dashboard" | null>(null);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   const fetchPosts = useCallback(async () => {
+    setVisibleCount(10);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
@@ -185,14 +187,47 @@ export default function FeedPage() {
   };
 
   const handleLocate = () => {
+    if (!navigator.geolocation) {
+      showToast("Geolocation is not supported by your browser.", "error");
+      return;
+    }
     showToast("Locating...", "info");
-    setTimeout(() => {
-      setCurrentGPS("Nnewi, Anambra State");
-      setLocationFilter("Anambra");
-      setShowLocationCard(true);
-      showToast("You are in Nnewi, Anambra State", "location");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 400);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          // Reverse geocode using OpenStreetMap Nominatim (free, no API key)
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          const data = await res.json();
+          const addr = data.address ?? {};
+          const city = addr.city || addr.town || addr.village || addr.county || "Unknown area";
+          const state = addr.state?.replace(/\s+State$/i, "").trim() ?? "";
+          const label = state ? `${city}, ${state} State` : city;
+          setCurrentGPS(label);
+          setLocationFilter(state);
+          setShowLocationCard(true);
+          showToast(`You are in ${label}`, "location");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch {
+          // Fallback — show raw coords if geocoding fails
+          const label = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          setCurrentGPS(label);
+          setShowLocationCard(true);
+          showToast(`Location detected: ${label}`, "info");
+        }
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          showToast("Location access denied. Please allow location in browser settings.", "warning");
+        } else {
+          showToast("Could not detect your location. Try again.", "error");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const handleClearLocation = () => {
@@ -252,7 +287,7 @@ export default function FeedPage() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center space-x-2 text-slate-100">
                 <i className="fa-solid fa-location-dot text-emerald-400 text-sm" />
-                <h2 className="font-bold text-sm tracking-tight">You are in Nnewi, Anambra State</h2>
+                <h2 className="font-bold text-sm tracking-tight">You are in {currentGPS}</h2>
               </div>
               <button onClick={handleClearLocation} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 hover:border-emerald-500/40 text-slate-300 hover:text-emerald-400 flex items-center justify-center transition">
                 <i className="fa-solid fa-xmark text-xs" />
@@ -263,17 +298,17 @@ export default function FeedPage() {
               <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 space-y-1.5">
                 <div className="font-semibold text-slate-200 flex items-center space-x-1.5">
                   <i className="fa-solid fa-shield-halved text-amber-400" />
-                  <span>Nnewi City Advisory</span>
+                  <span>{currentGPS} Advisory</span>
                 </div>
                 <p className="text-slate-400 leading-relaxed">
-                  Several violent incidents confirmed in this area recently. Vigilante and police patrols are active. Caution advised when travelling the Nnewi–Ozubulu bypass after dark.
+                  Stay alert in this area. Check the reports below for recent incidents near your location. Contact emergency services if you witness any ongoing threat.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 text-[11px]">
                 <span className="text-slate-400">Emergency:</span>
-                <a href="tel:08033429811" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">Police: 0803 342 9811</a>
-                <a href="tel:08060001212" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">Vigilante: 0806 000 1212</a>
-                <a href="tel:08035438970" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">NAUTH: 0803 543 8970</a>
+                <a href="tel:199" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">Police: 199</a>
+                <a href="tel:112" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">Emergency: 112</a>
+                <a href="tel:08033429811" className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono transition">NEMA: 0800 033 3132</a>
               </div>
             </div>
           </div>
@@ -298,16 +333,43 @@ export default function FeedPage() {
               <p className="text-xs text-slate-400">No incident reports found in this view.</p>
             </div>
           ) : (
-            posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onConfirmToggle={handleConfirmToggle}
-                showToast={showToast}
-              />
-            ))
+            <>
+              {posts.slice(0, visibleCount).map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  onConfirmToggle={handleConfirmToggle}
+                  showToast={showToast}
+                />
+              ))}
+              {/* Load more */}
+              {visibleCount < posts.length && visibleCount < 20 && (
+                <button
+                  onClick={() => setVisibleCount(20)}
+                  className="w-full py-3 rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800/60 text-slate-400 hover:text-slate-200 text-xs font-medium transition flex items-center justify-center gap-2"
+                >
+                  <i className="fa-solid fa-chevron-down text-[10px]" />
+                  See more reports
+                </button>
+              )}
+            </>
           )}
         </div>
+
+        {/* Footer */}
+        {!loading && (
+          <footer className="mt-6 pb-24 text-center space-y-2">
+            <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
+              <span>© {new Date().getFullYear()} OSINT-NG</span>
+              <span className="text-slate-700">·</span>
+              <a href="/about" className="hover:text-emerald-400 transition">About</a>
+              <span className="text-slate-700">·</span>
+              <a href="https://wa.me/2348060760476" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition flex items-center gap-1">
+                <i className="fa-brands fa-whatsapp text-[#25D366]" /> Support
+              </a>
+            </div>
+          </footer>
+        )}
       </main>
 
       {/* FAB Stack */}

@@ -33,9 +33,6 @@ export default function Navbar({
           <a href="/" className="font-bold text-lg tracking-tight text-emerald-400 hover:text-emerald-300 transition font-mono">
             OSINT-NG
           </a>
-          <a href="/about" className="text-[11px] text-slate-400 hover:text-emerald-400 transition border-l border-slate-700 pl-2.5 ml-0.5">
-            About
-          </a>
         </div>
 
         {/* Actions */}
