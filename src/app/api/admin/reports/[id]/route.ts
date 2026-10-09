@@ -14,13 +14,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { title, category, source, contact, location, status, body: reportBody, incidentStatus } = body;
+    const { title, category, source, contact, location, status, body: reportBody, incidentStatus, markPaid, bountyEligible } = body;
 
     const VALID_INCIDENT_STATUSES = ["Active", "Resolved"];
-
-    // Validate incidentStatus if provided
     if (incidentStatus && !VALID_INCIDENT_STATUSES.includes(incidentStatus)) {
       return NextResponse.json({ error: "Invalid incident status." }, { status: 400 });
+    }
+
+    // Handle mark paid separately
+    if (markPaid === true) {
+      const updated = await prisma.adminReport.update({
+        where: { id },
+        data: { bountyPaid: true },
+      });
+      return NextResponse.json({ report: updated });
     }
 
     const updated = await prisma.adminReport.update({
@@ -33,17 +40,26 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         ...(location && { location }),
         ...(status && { status }),
         ...(reportBody && { body: reportBody }),
-        // Auto-mark bounty paid when approved
-        ...(status === "Approved" && { bountyPaid: true }),
+        ...(status === "Approved" && { bountyPaid: false }),
+        ...(bountyEligible !== undefined && { bountyEligible }),
       },
     });
 
-    // If approving, update the matching post with chosen incident status
+    // Always sync edits to the matching post
+    const postUpdateData: Record<string, string> = {};
+    if (title) postUpdateData.title = title;
+    if (reportBody) postUpdateData.body = reportBody;
+    if (location) postUpdateData.location = location;
+
     if (status === "Approved") {
       const postStatus = incidentStatus ?? "Active";
+      postUpdateData.status = postStatus;
+    }
+
+    if (Object.keys(postUpdateData).length > 0) {
       await prisma.post.updateMany({
-        where: { title: updated.title, state: updated.state },
-        data: { status: postStatus },
+        where: { title: title ?? updated.title, state: updated.state },
+        data: postUpdateData,
       });
     }
 
@@ -57,6 +73,17 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(_req: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
+
+    // Find the report first so we can match and delete the post too
+    const report = await prisma.adminReport.findUnique({ where: { id } });
+
+    if (report) {
+      // Delete the matching post from the public feed
+      await prisma.post.deleteMany({
+        where: { title: report.title, state: report.state },
+      });
+    }
+
     await prisma.adminReport.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (err) {

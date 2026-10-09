@@ -30,8 +30,11 @@ export default function Navbar({
             alt="OSINT-NG logo"
             className="w-8 h-8 rounded-xl object-cover border border-emerald-500/30 shadow-lg shadow-emerald-950/40"
           />
-          <a href="/" className="font-bold text-lg tracking-tight text-white hover:text-emerald-400 transition font-mono">
-            OSINT<span className="text-emerald-400">-NG</span>
+          <a href="/" className="font-bold text-lg tracking-tight text-emerald-400 hover:text-emerald-300 transition font-mono">
+            OSINT-NG
+          </a>
+          <a href="/about" className="text-[11px] text-slate-400 hover:text-emerald-400 transition border-l border-slate-700 pl-2.5 ml-0.5">
+            About
           </a>
         </div>
 

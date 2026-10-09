@@ -4,7 +4,7 @@ export interface Post {
   authorName: string;
   badge: string;
   sourceUrl: string | null;
-  status: "Active" | "Resolved";
+  status: "Active" | "Resolved" | "draft";
   title: string;
   body: string;
   location: string;
@@ -22,6 +22,7 @@ export interface Post {
 
 export interface AdminReport {
   id: string;
+  refCode: string | null;
   contact: string;
   category: string;
   title: string;
@@ -32,7 +33,10 @@ export interface AdminReport {
   mediaUrl: string | null;
   status: "Pending" | "Approved" | "Rejected";
   bountyPaid: boolean;
+  bountyEligible: boolean;
   confirmations: number;
+  bankAccount: string | null;
+  bankName: string | null;
   createdAt: string;
   updatedAt: string;
 }

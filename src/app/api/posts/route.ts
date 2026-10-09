@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
 
     const where = {
       AND: [
+        { status: { not: "draft" } },
         search
           ? {
               OR: [
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     const body = await req.json();
-    const { title, incidentType, contact, state, lga, town, description, mediaUrl, isSensitive } = body;
+    const { title, incidentType, contact, state, lga, town, description, mediaUrl, isSensitive, sourceUrl } = body;
     const resolvedTitle = incidentType || title;
 
     if (!resolvedTitle || !state || !lga || !town || !description) {
@@ -107,7 +108,11 @@ export async function POST(req: NextRequest) {
     const cleanState = state.replace(/^FCT\s*-\s*/i, "").trim().toUpperCase();
     const authorName = `OSINT ${cleanState}`;
 
-    // Also create an AdminReport entry pending review
+    // Generate a short human-readable ref code: RPT-YYYY-NNNN
+    const year = new Date().getFullYear();
+    const count = await prisma.adminReport.count();
+    const refCode = `RPT-${year}-${String(count + 1).padStart(4, "0")}`;
+
     const [post] = await prisma.$transaction([
       prisma.post.create({
         data: {
@@ -122,11 +127,13 @@ export async function POST(req: NextRequest) {
           town,
           mediaUrl: mediaUrl ?? null,
           isSensitive: isSensitive ?? false,
-          status: "Active",
+          sourceUrl: sourceUrl ?? null,
+          status: "draft",
         },
       }),
       prisma.adminReport.create({
         data: {
+          refCode,
           contact: contact ?? session?.email ?? "anonymous",
           category: incidentType ?? title,
           title: resolvedTitle,
@@ -140,7 +147,7 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
-    return NextResponse.json({ post }, { status: 201 });
+    return NextResponse.json({ post, refCode }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/posts]", err);
     return NextResponse.json({ error: "Failed to create post." }, { status: 500 });

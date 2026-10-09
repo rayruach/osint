@@ -155,18 +155,23 @@ function EditModal({ report, onClose, onSaved, showToast }: {
 }
 
 /* ─── View Modal ──────────────────────────────────────── */
-function ViewModal({ report, onClose, onApprove, onReject }: {
+function ViewModal({ report, onClose, onApprove, onReject, onMarkPaid }: {
   report: AdminReport; onClose: () => void;
-  onApprove: (incidentStatus: string) => void; onReject: () => void;
+  onApprove: (incidentStatus: string, bountyEligible: boolean) => void;
+  onReject: () => void;
+  onMarkPaid: () => void;
 }) {
   const [mediaRevealed, setMediaRevealed] = useState(false);
   const [incidentStatus, setIncidentStatus] = useState("Active");
+  const [bountyEligible, setBountyEligible] = useState(false);
 
   return (
     <Modal open onClose={onClose}>
       <div className="flex items-center justify-between border-b border-slate-800 pb-3 pr-8">
         <div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">{report.id}</span>
+          {report.refCode && (
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">{report.refCode}</span>
+          )}
           <h3 className="text-sm font-bold text-white mt-1.5 leading-snug">{report.title}</h3>
         </div>
         <StatusBadge status={report.status} />
@@ -182,11 +187,52 @@ function ViewModal({ report, onClose, onApprove, onReject }: {
         </div>
         <div className="flex items-center justify-between border-t border-slate-900 pt-1.5">
           <span className="text-slate-400">Bounty:</span>
-          <span className={`font-mono font-semibold ${report.status === "Approved" ? "text-emerald-400" : report.status === "Rejected" ? "text-red-400" : "text-amber-400"}`}>
-            {report.status === "Approved" ? "Disbursed (₦500 Paid)" : report.status === "Rejected" ? "Ineligible" : "Pending (₦500 queued)"}
+          <span className={`font-mono font-semibold ${report.bountyPaid ? "text-emerald-400" : report.status === "Rejected" ? "text-red-400" : "text-amber-400"}`}>
+            {report.bountyPaid ? "Paid (₦500)" : report.status === "Rejected" ? "Ineligible" : "Pending (₦500 queued)"}
           </span>
         </div>
       </div>
+
+      {/* Bank Details */}
+      {(report.bankAccount || report.bankName) ? (
+        <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 flex items-center space-x-1.5">
+              <i className="fa-solid fa-building-columns text-[10px]" />
+              <span>Bank Details</span>
+            </span>
+            {!report.bountyPaid && report.status === "Approved" && (
+              <button
+                onClick={onMarkPaid}
+                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg transition flex items-center space-x-1"
+              >
+                <i className="fa-solid fa-check text-[9px]" />
+                <span>Mark Paid</span>
+              </button>
+            )}
+          </div>
+          {report.bankName && (
+            <div className="flex items-center justify-between border-t border-slate-900 pt-1.5">
+              <span className="text-slate-400">Bank:</span>
+              <span className="font-semibold text-slate-200">{report.bankName}</span>
+            </div>
+          )}
+          {report.bankAccount && (
+            <div className="flex items-center justify-between border-t border-slate-900 pt-1.5">
+              <span className="text-slate-400">Account:</span>
+              <span className="font-mono font-bold text-white tracking-widest">{report.bankAccount}</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        report.status === "Approved" && !report.bountyPaid && (
+          <div className="bg-amber-950/30 border border-amber-800/40 rounded-xl p-2.5 text-[11px] text-amber-400 flex items-center space-x-2">
+            <i className="fa-solid fa-triangle-exclamation text-[10px]" />
+            <span>No bank details provided. Contact submitter via {report.contact} to collect payment info.</span>
+          </div>
+        )
+      )}
+
       <div className="grid grid-cols-3 gap-2 text-xs">
         {[["Category", report.category], ["Location", report.location], ["Source", report.source]].map(([label, val]) => (
           <div key={label} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
@@ -234,6 +280,21 @@ function ViewModal({ report, onClose, onApprove, onReject }: {
             <option value="Resolved">Resolved - Incident closed / no longer active</option>
           </select>
           <p className="text-[10px] text-slate-500">This status will be applied to the public post when you approve.</p>
+
+          {/* Bounty eligible toggle */}
+          <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
+            <div>
+              <p className="text-slate-300 font-semibold text-[11px]">Mark as Bounty Eligible</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Only high-priority reports with verified evidence qualify for ₦500 reward.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBountyEligible((v) => !v)}
+              className={`w-10 h-5 rounded-full border flex items-center transition-colors duration-200 shrink-0 ml-3 ${bountyEligible ? "bg-emerald-600 border-emerald-500" : "bg-slate-800 border-slate-700"}`}
+            >
+              <span className={`w-3.5 h-3.5 rounded-full bg-white shadow transition-transform duration-200 ml-0.5 ${bountyEligible ? "translate-x-4" : "translate-x-0"}`} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -243,7 +304,7 @@ function ViewModal({ report, onClose, onApprove, onReject }: {
           <button onClick={onReject} className="px-3.5 py-2 bg-red-950 hover:bg-red-900 border border-red-800/80 text-red-300 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5">
             <i className="fa-solid fa-ban" /><span>Reject</span>
           </button>
-          <button onClick={() => onApprove(incidentStatus)} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
+          <button onClick={() => onApprove(incidentStatus, bountyEligible)} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
             <i className="fa-solid fa-check" /><span>Approve & Disburse Bounty</span>
           </button>
         </div>
@@ -566,9 +627,15 @@ export default function AdminPage() {
     showToast("Admin data refreshed.", "info");
   };
 
-  const handleApprove = async (id: string, incidentStatus = "Verified") => {
-    await fetch(`/api/admin/reports/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "Approved", incidentStatus }) });
-    showToast(`Report approved. Incident marked as "${incidentStatus}". Bounty queued.`, "success");
+  const handleApprove = async (id: string, incidentStatus = "Active", bountyEligible = false) => {
+    await fetch(`/api/admin/reports/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "Approved", incidentStatus, bountyEligible }) });
+    showToast(`Report approved.${bountyEligible ? " Bounty eligible — ₦500 queued." : ""}`, "success");
+    fetchReports(); fetchAnalytics();
+  };
+
+  const handleMarkPaid = async (id: string) => {
+    await fetch(`/api/admin/reports/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ markPaid: true }) });
+    showToast("Bounty marked as paid.", "success");
     fetchReports(); fetchAnalytics();
   };
 
@@ -621,7 +688,7 @@ export default function AdminPage() {
             <img src="/logo.png" alt="OSINT.NG" className="w-8 h-8 rounded-xl object-cover border border-emerald-500/30" />
             <div>
               <div className="flex items-center space-x-1.5">
-                <span className="font-bold text-sm tracking-tight text-white font-mono">OSINT<span className="text-emerald-400">.NG</span></span>
+                <span className="font-bold text-sm tracking-tight text-emerald-400 font-mono">OSINT-NG</span>
                 <span className="text-[9px] font-mono px-1.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold uppercase">ADMIN</span>
               </div>
               <p className="text-[10px] text-slate-400 font-mono">Admin Panel</p>
@@ -949,8 +1016,9 @@ export default function AdminPage() {
         <ViewModal
           report={viewReport}
           onClose={() => setViewReport(null)}
-          onApprove={(incidentStatus) => { handleApprove(viewReport.id, incidentStatus); setViewReport(null); }}
+          onApprove={(incidentStatus, bountyEligible) => { handleApprove(viewReport.id, incidentStatus, bountyEligible); setViewReport(null); }}
           onReject={() => { handleReject(viewReport.id); setViewReport(null); }}
+          onMarkPaid={() => { handleMarkPaid(viewReport.id); setViewReport(null); }}
         />
       )}
       {editReport && (

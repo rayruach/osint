@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { prisma, withRetry } from "@/lib/db";
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ user: null, isAdmin: false });
+  try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ user: null, isAdmin: false });
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { id: true, fullName: true, email: true, phone: true, ein: true, isAdmin: true, createdAt: true },
-  });
+    const user = await withRetry(() => prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { id: true, fullName: true, email: true, phone: true, ein: true, isAdmin: true, createdAt: true },
+    }));
 
-  return NextResponse.json({ user, isAdmin: session.isAdmin });
+    return NextResponse.json({ user, isAdmin: session.isAdmin });
+  } catch {
+    return NextResponse.json({ user: null, isAdmin: false });
+  }
 }

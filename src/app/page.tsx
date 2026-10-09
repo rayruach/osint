@@ -330,6 +330,15 @@ export default function FeedPage() {
         >
           <i className={`fa-solid ${user ? "fa-user-check" : "fa-user"} text-xs`} />
         </button>
+        <a
+          href="https://wa.me/2348060760476"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Contact Support"
+          className="w-10 h-10 rounded-full bg-[#25D366] hover:bg-[#1ebe5d] active:scale-95 text-white flex items-center justify-center shadow-xl border-2 border-green-400/40 transition-all"
+        >
+          <i className="fa-solid fa-headset text-xs" />
+        </a>
         {showScrollTop && (
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}

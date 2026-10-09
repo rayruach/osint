@@ -88,6 +88,7 @@ model SosAlert {
 
 model AdminReport {
   id          String   @id @default(cuid())
+  refCode     String?
   contact     String
   category    String
   title       String
@@ -98,7 +99,10 @@ model AdminReport {
   mediaUrl    String?
   status      String   @default("Pending")  // "Pending" | "Approved" | "Rejected"
   bountyPaid  Boolean  @default(false)
+  bountyEligible Boolean @default(false)
   confirmations Int    @default(0)
+  bankAccount String?
+  bankName    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

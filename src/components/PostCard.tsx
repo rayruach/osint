@@ -63,6 +63,7 @@ function timeAgo(dateStr: string): string {
 
 export default function PostCard({ post, onConfirmToggle, showToast }: Props) {
   const [revealed, setRevealed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const handleShare = async () => {
     const url = `${window.location.origin}#${post.id}`;
@@ -114,25 +115,55 @@ export default function PostCard({ post, onConfirmToggle, showToast }: Props) {
         {/* Content */}
         <div className="space-y-1.5 pl-1">
           <h3 className="font-bold text-sm text-slate-100 leading-snug">{post.title}</h3>
-          <p className="text-xs text-slate-300 leading-relaxed">{post.body}</p>
+          {(() => {
+            const LIMIT = 120;
+            const isLong = post.body.length > LIMIT;
+            const displayText = isLong && !expanded ? post.body.slice(0, LIMIT).trimEnd() + "..." : post.body;
+            return (
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {displayText}
+                {post.sourceUrl && !isLong && (
+                  <>
+                    {" "}
+                    <a href={post.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center space-x-1 text-emerald-400 hover:text-emerald-300 hover:underline transition">
+                      <span className="text-[11px]">— {post.badge}</span>
+                      <i className="fa-solid fa-arrow-up-right-from-square text-[9px]" />
+                    </a>
+                  </>
+                )}
+                {!post.sourceUrl && !isLong && (
+                  <span className="text-[11px] text-slate-500 ml-1">— {post.badge}</span>
+                )}
+                {isLong && !expanded && (
+                  <button onClick={() => setExpanded(true)} className="text-emerald-400 hover:text-emerald-300 transition ml-1 text-[11px] font-medium">
+                    Read more
+                  </button>
+                )}
+                {isLong && expanded && post.sourceUrl && (
+                  <>
+                    {" "}
+                    <a href={post.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center space-x-1 text-emerald-400 hover:text-emerald-300 hover:underline transition">
+                      <span className="text-[11px]">— {post.badge}</span>
+                      <i className="fa-solid fa-arrow-up-right-from-square text-[9px]" />
+                    </a>
+                  </>
+                )}
+                {isLong && expanded && !post.sourceUrl && (
+                  <span className="text-[11px] text-slate-500 ml-1">— {post.badge}</span>
+                )}
+              </p>
+            );
+          })()}
 
-          {/* Source badge */}
-          <div className="pt-1">
-            <a
-              href={post.sourceUrl ?? "#"}
-              target={post.sourceUrl ? "_blank" : undefined}
-              rel="noopener noreferrer"
-              onClick={!post.sourceUrl ? (e) => { e.preventDefault(); showToast(`Source: Verified ${post.badge} intelligence report`, "info"); } : undefined}
-              className="inline-flex items-center space-x-1.5 text-[11px] bg-slate-950 hover:bg-slate-900 text-slate-300 hover:text-emerald-300 px-2.5 py-1 rounded-lg border border-slate-800 hover:border-emerald-500/40 transition group cursor-pointer"
-            >
-              <span className="text-slate-500">Source:</span>
-              <span className="font-semibold text-emerald-400 group-hover:underline">{post.badge}</span>
-              <span className="inline-flex items-center space-x-1 text-[10px] text-slate-400 border-l border-slate-800 pl-2">
-                <span>View link</span>
-                <i className="fa-solid fa-arrow-up-right-from-square text-[9px]" />
-              </span>
-            </a>
-          </div>
+          {/* Confirmation nudge */}
+          {!post.isSOS && (
+            <div className="flex items-center space-x-2 bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 mt-1">
+              <i className="fa-regular fa-circle-check text-emerald-500 text-xs shrink-0" />
+              <p className="text-[11px] text-slate-400">
+                Did you witness this incident? Please confirm it below.
+              </p>
+            </div>
+          )}
 
           {/* Media */}
           {post.mediaUrl && (
