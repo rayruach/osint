@@ -48,7 +48,7 @@ export default function RegisterModal({ open, onClose, onSwitchToLogin, showToas
           <i className="fa-solid fa-id-card text-sm" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-slate-100">Register an OSINT Account</h3>
+          <h3 className="text-sm font-bold text-slate-100">Register a BIOS Account</h3>
           <p className="text-[11px] text-slate-400">Get an Emergency Identification Number (EIN)</p>
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function RegisterModal({ open, onClose, onSwitchToLogin, showToas
           <button type="submit" disabled={loading}
             className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-semibold rounded-xl flex items-center space-x-1.5 transition text-xs disabled:opacity-60">
             <i className="fa-solid fa-user-check text-xs" />
-            <span>{loading ? "Registering..." : "Register an OSINT Account"}</span>
+            <span>{loading ? "Registering..." : "Register a BIOS Account"}</span>
           </button>
         </div>
 

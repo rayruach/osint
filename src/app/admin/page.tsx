@@ -657,7 +657,7 @@ export default function AdminPage() {
     const headers = ["S/N","ID","Contact","Date","Category","Location","Confirmations","Status","Title","Body"];
     const rows = reports.map((r, i) => [i + 1, r.id, `"${r.contact}"`, `"${timeAgo(r.createdAt)}"`, `"${r.category}"`, `"${r.location}"`, r.confirmations, r.status, `"${r.title.replace(/"/g,'""')}"`, `"${r.body.replace(/"/g,'""')}"`]);
     const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const a = document.createElement("a"); a.href = encodeURI(csv); a.download = `OSINT_NG_Reports_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    const a = document.createElement("a"); a.href = encodeURI(csv); a.download = `BIOS_NG_Reports_${new Date().toISOString().slice(0,10)}.csv`; a.click();
     showToast("Reports exported to CSV.", "success");
   };
 
@@ -735,10 +735,10 @@ export default function AdminPage() {
 
         <div className="p-4 border-t border-slate-800/80 bg-slate-950/40">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-mono text-xs font-bold">OS</div>
+            <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-mono text-xs font-bold">B</div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-200">Admin</p>
-              <p className="text-[10px] text-slate-400 font-mono truncate">admin@osint.ng</p>
+              <p className="text-xs font-semibold text-slate-200">BIOS Admin</p>
+              <p className="text-[10px] text-slate-400 font-mono truncate">Administrator</p>
             </div>
             <button
               onClick={handleLogout}

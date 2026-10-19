@@ -31,7 +31,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 
 export async function getSession(): Promise<JWTPayload | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get("osint_session")?.value;
+  const token = cookieStore.get("bios_session")?.value;
   if (!token) return null;
   return verifyToken(token);
 }

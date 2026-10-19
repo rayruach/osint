@@ -119,7 +119,7 @@ export default function FeedPage() {
       if (search) params.set("search", search);
       if (locationFilter) params.set("state", locationFilter);
       // Pass device ID so server can restore confirmed state for anonymous visitors
-      const deviceId = localStorage.getItem("osint_device_id");
+      const deviceId = localStorage.getItem("bios_device_id");
       if (deviceId) params.set("deviceId", deviceId);
       const res = await fetch(`/api/posts?${params}`);
       const data = await res.json();
@@ -135,7 +135,7 @@ export default function FeedPage() {
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "granted") setPushEnabled(true);
-    if (localStorage.getItem("osint_push_muted") === "1") setPushMuted(true);
+    if (localStorage.getItem("bios_push_muted") === "1") setPushMuted(true);
   }, []);
 
   const handleConfirmToggle = async (id: string) => {
@@ -151,10 +151,10 @@ export default function FeedPage() {
     );
 
     // Get or generate device ID
-    let deviceId = localStorage.getItem("osint_device_id");
+    let deviceId = localStorage.getItem("bios_device_id");
     if (!deviceId) {
       deviceId = crypto.randomUUID();
-      localStorage.setItem("osint_device_id", deviceId);
+      localStorage.setItem("bios_device_id", deviceId);
     }
 
     // Sync with server in background
@@ -190,7 +190,7 @@ export default function FeedPage() {
       // Toggle mute
       const newMuted = !pushMuted;
       setPushMuted(newMuted);
-      localStorage.setItem("osint_push_muted", newMuted ? "1" : "0");
+      localStorage.setItem("bios_push_muted", newMuted ? "1" : "0");
       showToast(newMuted ? "Notifications silenced." : "Notifications unmuted.", newMuted ? "info" : "success");
       return;
     }
@@ -199,7 +199,7 @@ export default function FeedPage() {
     if (perm === "granted") {
       setPushEnabled(true);
       setPushMuted(false);
-      localStorage.setItem("osint_push_muted", "0");
+      localStorage.setItem("bios_push_muted", "0");
       showToast("Push Notifications enabled!", "success");
       new Notification("BIOS", { body: "You will receive emergency notifications." });
     }

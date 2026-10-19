@@ -46,7 +46,7 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, showToas
           <i className="fa-solid fa-right-to-bracket text-sm" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-slate-100">Log In to OSINT</h3>
+          <h3 className="text-sm font-bold text-slate-100">Log In to BIOS</h3>
           <p className="text-[11px] text-slate-400">Access your Emergency Identification Number (EIN)</p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, showToas
 
         <div className="text-center pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
           Don&apos;t have an account?{" "}
-          <button type="button" onClick={onSwitchToRegister} className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2 ml-1">Register an OSINT Account</button>
+          <button type="button" onClick={onSwitchToRegister} className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2 ml-1">Register a BIOS Account</button>
         </div>
       </form>
     </Modal>
