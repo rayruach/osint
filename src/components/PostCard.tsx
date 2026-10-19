@@ -69,7 +69,7 @@ export default function PostCard({ post, onConfirmToggle, showToast }: Props) {
     const url = `${window.location.origin}#${post.id}`;
     const data = {
       title: `${post.authorName}: ${post.title}`,
-      text: `[OSINT.NG Alert] ${post.location} - ${post.body}`,
+      text: `[BIOS Alert] ${post.location} - ${post.body}`,
       url,
     };
     if (navigator.share && navigator.canShare?.(data)) {
@@ -114,13 +114,13 @@ export default function PostCard({ post, onConfirmToggle, showToast }: Props) {
 
         {/* Content */}
         <div className="space-y-1.5 pl-1">
-          <h3 className="font-bold text-sm text-slate-100 leading-snug">{post.title}</h3>
+          <h3 className="font-editorial text-2xl font-bold leading-tight text-slate-100">{post.title}</h3>
           {(() => {
             const LIMIT = 120;
             const isLong = post.body.length > LIMIT;
             const displayText = isLong && !expanded ? post.body.slice(0, LIMIT).trimEnd() + "..." : post.body;
             return (
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-sm text-slate-300 leading-relaxed">
                 {displayText}
                 {post.sourceUrl && !isLong && (
                   <>

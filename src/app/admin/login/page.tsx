@@ -44,9 +44,9 @@ export default function AdminLoginPage() {
 
         {/* Logo */}
         <div className="flex flex-col items-center space-y-3">
-          <img src="/logo.png" alt="OSINT.NG" className="w-12 h-12 rounded-2xl border border-emerald-500/30 object-cover" />
+          <img src="/logo.png" alt="BIOS" className="w-12 h-12 rounded-2xl border border-emerald-500/30 object-cover" />
           <div className="text-center">
-            <h1 className="text-lg font-bold text-emerald-400 font-mono">OSINT-NG</h1>
+            <h1 className="text-lg font-bold text-emerald-400 font-mono">BIOS</h1>
             <p className="text-xs text-slate-400 mt-0.5">Admin Access</p>
           </div>
         </div>

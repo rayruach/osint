@@ -68,6 +68,32 @@ function LiveTicker({ posts }: { posts: Post[] }) {
   );
 }
 
+function FeaturedReport({ post, onReport }: { post?: Post; onReport: () => void }) {
+  if (!post) return null;
+  return (
+    <section className="relative overflow-hidden border-b border-slate-800 bg-[#0a0d12]">
+      {post.mediaUrl && <div className="absolute inset-0 bg-cover bg-center opacity-25" style={{ backgroundImage: `url(${post.mediaUrl})` }} />}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#080b10] via-[#080b10]/90 to-[#080b10]/60" />
+      <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-12">
+          <div className="space-y-5 lg:col-span-8">
+            <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-wider"><span className="bg-red-600 px-2.5 py-1 font-bold text-white">Report</span><span className="text-amber-400">{post.state}</span><span className="text-slate-500">Published {new Date(post.createdAt).toLocaleDateString()}</span></div>
+            <h1 className="max-w-4xl font-editorial text-4xl font-bold leading-[1.02] tracking-tight text-white sm:text-5xl lg:text-6xl">{post.title}</h1>
+            <p className="max-w-3xl text-base font-light leading-relaxed text-slate-300 sm:text-lg">{post.body.length > 280 ? `${post.body.slice(0, 280).trimEnd()}…` : post.body}</p>
+            <div className="flex flex-wrap items-center gap-4 border-t border-slate-800 pt-4 text-xs text-slate-400"><span className="font-medium text-slate-200">By {post.authorName}</span><span className="text-slate-700">|</span><span>{post.lga}, {post.state}</span>{post.sourceUrl && <a href={post.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300">View source <i className="fa-solid fa-arrow-up-right-from-square ml-1 text-[9px]" /></a>}</div>
+          </div>
+          <aside className="self-start rounded-xl border border-slate-800 bg-slate-950/85 p-5 backdrop-blur lg:col-span-4">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-amber-400">Report details</p>
+            <div className="my-4 border-t border-slate-800" />
+            <p className="text-sm font-semibold text-white">{post.badge}</p><p className="mt-2 text-xs leading-relaxed text-slate-400">{post.confirmations} community confirmation{post.confirmations === 1 ? "" : "s"}</p>
+            <button onClick={onReport} className="mt-5 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left text-xs font-semibold text-white hover:bg-slate-700 transition">Submit related information</button>
+          </aside>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function FeedPage() {
   const { toasts, showToast, removeToast } = useToast();
   const { user, refresh: refreshUser, logout } = useUser();
@@ -82,7 +108,6 @@ export default function FeedPage() {
   const [showLocationCard, setShowLocationCard] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushMuted, setPushMuted] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const [modal, setModal] = useState<"report" | "sos" | "register" | "login" | "dashboard" | null>(null);
   const [visibleCount, setVisibleCount] = useState(10);
@@ -111,12 +136,6 @@ export default function FeedPage() {
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "granted") setPushEnabled(true);
     if (localStorage.getItem("osint_push_muted") === "1") setPushMuted(true);
-  }, []);
-
-  useEffect(() => {
-    const handler = () => setShowScrollTop(window.scrollY > 120);
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
   }, []);
 
   const handleConfirmToggle = async (id: string) => {
@@ -182,7 +201,7 @@ export default function FeedPage() {
       setPushMuted(false);
       localStorage.setItem("osint_push_muted", "0");
       showToast("Push Notifications enabled!", "success");
-      new Notification("OSINT.NG", { body: "You will receive emergency notifications." });
+      new Notification("BIOS", { body: "You will receive emergency notifications." });
     }
   };
 
@@ -242,26 +261,25 @@ export default function FeedPage() {
     setModal("login");
   };
 
+
   return (
-    <div className="min-h-full flex flex-col font-sans antialiased bg-slate-950 selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-full flex flex-col font-sans antialiased bg-[#080B10] selection:bg-red-600 selection:text-white">
       <Navbar
         onSearchToggle={() => setShowSearch((v) => !v)}
         onLocate={handleLocate}
         onSOSClick={() => setModal("sos")}
+        onReportClick={() => setModal("report")}
+        onUserClick={handleUserClick}
+        userLabel={user?.fullName}
         onPushToggle={handlePushToggle}
         pushEnabled={pushEnabled}
         pushMuted={pushMuted}
         showToast={showToast}
       />
 
-      <main className="flex-1 max-w-2xl w-full mx-auto px-2 sm:px-4 py-3 space-y-3">
-
-        {/* Live Intel Ticker */}
-        <LiveTicker posts={posts} />
-
-        {/* Search Panel (toggle from navbar) */}
-        {showSearch && (
-          <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-2.5 px-3 shadow-xl">
+      {showSearch && (
+        <div className="sticky top-16 z-30 w-full px-4 sm:top-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl rounded-2xl border border-slate-800 bg-slate-900/90 p-2.5 px-3 shadow-xl backdrop-blur-md">
             <div className="relative flex-1">
               <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs" />
               <input
@@ -279,7 +297,17 @@ export default function FeedPage() {
               )}
             </div>
           </div>
-        )}
+        </div>
+      )}
+
+      <FeaturedReport post={posts[0]} onReport={() => setModal("report")} />
+
+      <main id="reports" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-3">
+
+        <div className="flex items-end justify-between border-b border-slate-800 pb-4">
+          <div><p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-red-400">From the newsroom</p><h2 className="mt-1 font-editorial text-3xl font-bold text-white">Latest reports</h2></div>
+          <span className="font-mono text-[10px] text-slate-500">{posts.length} published</span>
+        </div>
 
         {/* Location Intel Card */}
         {showLocationCard && (
@@ -322,7 +350,7 @@ export default function FeedPage() {
         )}
 
         {/* Feed */}
-        <div className="space-y-4 pt-1">
+        <div className="pt-1">
           {loading ? (
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => <PostCardSkeleton key={i} />)}
@@ -334,14 +362,16 @@ export default function FeedPage() {
             </div>
           ) : (
             <>
-              {posts.slice(0, visibleCount).map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onConfirmToggle={handleConfirmToggle}
-                  showToast={showToast}
-                />
-              ))}
+              <div className="grid gap-5 md:grid-cols-2">
+                {posts.slice(0, visibleCount).map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    onConfirmToggle={handleConfirmToggle}
+                    showToast={showToast}
+                  />
+                ))}
+              </div>
               {/* Load more */}
               {visibleCount < posts.length && visibleCount < 20 && (
                 <button
@@ -360,7 +390,7 @@ export default function FeedPage() {
         {!loading && (
           <footer className="mt-6 pb-24 text-center space-y-2">
             <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
-              <span>© {new Date().getFullYear()} OSINT-NG</span>
+              <span>© {new Date().getFullYear()} BIOS</span>
               <span className="text-slate-700">·</span>
               <a href="/about" className="hover:text-emerald-400 transition">About</a>
               <span className="text-slate-700">·</span>
@@ -371,45 +401,6 @@ export default function FeedPage() {
           </footer>
         )}
       </main>
-
-      {/* FAB Stack */}
-      <div className="fixed bottom-2.5 sm:bottom-3 z-40 flex flex-col items-center space-y-1.5 right-4 sm:right-[max(1.25rem,calc(50vw-20rem))]">
-        <button
-          onClick={() => setModal("report")}
-          title="Create Incident Report"
-          className="w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white flex items-center justify-center shadow-2xl shadow-emerald-950/90 border-2 border-emerald-400/80 hover:border-emerald-300 transition-all hover:scale-105 group"
-        >
-          <i className="fa-solid fa-plus text-xl group-hover:rotate-90 transition-transform duration-200" />
-        </button>
-        <button
-          onClick={handleUserClick}
-          title={user ? `${user.fullName} | ${user.ein}` : "Login / Register"}
-          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-xl transition-all active:scale-95 ${
-            user
-              ? "bg-emerald-600/20 border-emerald-500/60 text-emerald-400 hover:bg-emerald-600/30"
-              : "bg-slate-900 border-slate-700 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50"
-          }`}
-        >
-          <i className={`fa-solid ${user ? "fa-user-check" : "fa-user"} text-xs`} />
-        </button>
-        <a
-          href="https://wa.me/2348060760476"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Contact Support"
-          className="w-10 h-10 rounded-full bg-[#25D366] hover:bg-[#1ebe5d] active:scale-95 text-white flex items-center justify-center shadow-xl border-2 border-green-400/40 transition-all"
-        >
-          <i className="fa-solid fa-headset text-xs" />
-        </a>
-        {showScrollTop && (
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="w-9 h-9 rounded-full bg-slate-900/95 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 shadow-xl flex items-center justify-center active:scale-95 transition"
-          >
-            <i className="fa-solid fa-arrow-up text-xs" />
-          </button>
-        )}
-      </div>
 
       {/* Modals */}
       <ReportModal

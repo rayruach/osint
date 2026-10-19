@@ -2,16 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&display=swap');
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: #020617; /* slate-950 */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #080B10;
   color: #f1f5f9; /* slate-100 */
+  overflow-x: hidden;
 }
+
+/* BIOS surface system: canvas, raised surfaces, and controls. These replace the
+   inherited dashboard Slate palette throughout the app. */
+.bg-slate-950 { background-color: #080B10; }
+.bg-slate-900 { background-color: #12161F; }
+.bg-slate-800 { background-color: #1E2638; }
+.bg-slate-900\/95 { background-color: rgb(18 22 31 / 0.95); }
+.bg-slate-900\/90 { background-color: rgb(18 22 31 / 0.90); }
+.bg-slate-900\/60 { background-color: rgb(18 22 31 / 0.60); }
+.bg-slate-950\/85 { background-color: rgb(8 11 16 / 0.85); }
+.bg-slate-950\/60 { background-color: rgb(8 11 16 / 0.60); }
+.bg-slate-950\/50 { background-color: rgb(8 11 16 / 0.50); }
+.bg-slate-800\/60 { background-color: rgb(30 38 56 / 0.60); }
+.bg-slate-800\/50 { background-color: rgb(30 38 56 / 0.50); }
+.border-slate-800 { border-color: #1E2638; }
+.border-slate-700 { border-color: #30394B; }
+.hover\:bg-slate-800:hover { background-color: #1E2638; }
+.hover\:bg-slate-700:hover { background-color: #30394B; }
 
 .font-mono {
   font-family: 'JetBrains Mono', monospace !important;
+}
+
+.font-editorial {
+  font-family: 'Newsreader', Georgia, serif;
 }
 
 /* Custom Scrollbar */

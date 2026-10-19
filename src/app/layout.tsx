@@ -2,20 +2,20 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "OSINT.NG | REYFUND",
-  description: "Open source intelligence Nigeria. 36 states + FCT",
+  title: "BIOS | Investigative Journalism",
+  description: "Independent journalism for Nigeria.",
   authors: [{ name: "ReyFund (Ruach & Zoe Nigeria) & Afribic Alliance" }],
   openGraph: {
-    title: "OSINT-NG",
-    description: "Open source intelligence Nigeria. 36 states + FCT",
+    title: "BIOS | Investigative Journalism",
+    description: "Independent journalism for Nigeria.",
     siteName: "ReyFund (Ruach & Zoe Nigeria) & Afribic Alliance",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "OSINT-NG",
-    description: "Open source intelligence Nigeria. 36 states + FCT",
-    site: "@osintng",
+    title: "BIOS | Investigative Journalism",
+    description: "Independent journalism for Nigeria.",
+    site: "@biosng",
   },
 };
 

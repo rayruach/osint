@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
     const locationString = [town, `${lga} LGA`, `${state} State`].join(", ");
     const cleanState = state.replace(/^FCT\s*-\s*/i, "").trim().toUpperCase();
-    const authorName = `OSINT ${cleanState}`;
+    const authorName = `BIOS ${cleanState}`;
 
     const post = await prisma.post.create({
       data: {

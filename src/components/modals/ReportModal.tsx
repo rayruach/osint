@@ -207,7 +207,7 @@ export default function ReportModal({ open, onClose, showToast, onSubmitted, def
 
           <div>
             <h3 className="text-base font-bold text-white">Report Submitted</h3>
-            <p className="text-xs text-slate-400 mt-1">Under review by the OSINT-NG desk.</p>
+            <p className="text-xs text-slate-400 mt-1">Under review by the BIOS desk.</p>
           </div>
 
           {refCode && (

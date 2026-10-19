@@ -692,10 +692,10 @@ export default function AdminPage() {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:translate-x-0`}>
         <div className="h-16 flex items-center px-5 border-b border-slate-800/80">
           <div className="flex items-center space-x-2.5">
-            <img src="/logo.png" alt="OSINT.NG" className="w-8 h-8 rounded-xl object-cover border border-emerald-500/30" />
+            <img src="/logo.png" alt="BIOS" className="w-8 h-8 rounded-xl object-cover border border-emerald-500/30" />
             <div>
               <div className="flex items-center space-x-1.5">
-                <span className="font-bold text-sm tracking-tight text-emerald-400 font-mono">OSINT-NG</span>
+                <span className="font-bold text-sm tracking-tight text-emerald-400 font-mono">BIOS</span>
                 <span className="text-[9px] font-mono px-1.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold uppercase">ADMIN</span>
               </div>
               <p className="text-[10px] text-slate-400 font-mono">Admin Panel</p>

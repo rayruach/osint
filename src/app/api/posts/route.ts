@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
 
     const locationString = [town, `${lga} LGA`, `${state} State`].join(", ");
     const cleanState = state.replace(/^FCT\s*-\s*/i, "").trim().toUpperCase();
-    const authorName = `OSINT ${cleanState}`;
+    const authorName = `BIOS ${cleanState}`;
 
     // Generate a short human-readable ref code: RPT-YYYY-NNNN
     const year = new Date().getFullYear();

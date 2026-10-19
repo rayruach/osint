@@ -1,145 +1,31 @@
 "use client";
 
+const principles = [
+  ["fa-file-lines", "Report", "We receive reports, documents, and public records."],
+  ["fa-list-check", "Verify", "We check claims against available evidence and sources."],
+  ["fa-newspaper", "Publish", "We publish reporting that serves the public interest."],
+];
+
 export default function AboutPage() {
   return (
-    <div
-      className="min-h-screen text-slate-200 font-sans flex flex-col"
-      style={{
-        backgroundColor: "#0b0e14",
-        backgroundImage: `
-          linear-gradient(to bottom, rgba(11,14,20,0.88), rgba(11,14,20,0.97)),
-          url('https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1920&q=80')
-        `,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-      }}
-    >
-      {/* Nav */}
-      <header className="sticky top-0 z-40 bg-black/40 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <img src="/logo.png" alt="OSINT-NG" className="w-8 h-8 rounded-xl object-cover border border-emerald-500/30" />
-            <a href="/" className="font-bold text-lg tracking-tight text-emerald-400 hover:text-emerald-300 transition font-mono">
-              OSINT-NG
-            </a>
-          </div>
-          <a href="/" className="text-xs text-slate-400 hover:text-emerald-400 transition flex items-center space-x-1.5">
-            <i className="fa-solid fa-arrow-left text-[10px]" />
-            <span>Back to Feed</span>
-          </a>
+    <div className="min-h-screen bg-[#080B10] text-slate-200">
+      <div className="border-b border-[#1E2638] bg-[#080B10] px-4 py-1.5 font-mono text-[10px] text-slate-400 sm:px-8"><div className="mx-auto flex max-w-7xl items-center justify-between"><span className="font-semibold text-slate-300">BIOS NEWSROOM</span><a href="/" className="hover:text-white">Back to reports</a></div></div>
+      <header className="border-b border-[#1E2638] bg-[#0A0D12]">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <a href="/" className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded bg-red-600 font-editorial text-2xl font-bold text-white">B</div><div><p className="font-editorial text-2xl font-bold leading-none text-white">BIOS</p><p className="mt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-red-400">Independent Investigative Journalism</p></div></a>
+          <a href="/" className="rounded-lg border border-[#30394B] px-3 py-2 text-xs font-medium text-slate-300 hover:bg-[#12161F] hover:text-white"><i className="fa-solid fa-arrow-left mr-1.5 text-[10px]" /> Reports</a>
         </div>
       </header>
 
-      <main className="flex-1 max-w-3xl mx-auto px-4 py-16 space-y-14 w-full">
+      <main>
+        <section className="border-b border-[#1E2638] bg-[#0A0D12]"><div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20"><p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-red-400">About BIOS</p><h1 className="mt-4 max-w-3xl font-editorial text-5xl font-bold leading-[1.02] tracking-tight text-white sm:text-6xl">Journalism in the public interest.</h1><p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">BIOS is an independent newsroom documenting issues that affect people and communities across Nigeria.</p></div></section>
 
-        {/* Hero */}
-        <section className="space-y-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-5 w-8 rounded overflow-hidden border border-white/20 shadow-sm" title="Federal Republic of Nigeria">
-              <div className="w-1/3 bg-[#008751]" />
-              <div className="w-1/3 bg-white" />
-              <div className="w-1/3 bg-[#008751]" />
-            </div>
-            <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase">
-              Open Source Intelligence Nigeria
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-[#008751] text-white font-black text-4xl sm:text-6xl px-4 py-2 rounded-xl tracking-tight uppercase shadow-lg">
-              OSINT
-            </div>
-            <div className="text-3xl sm:text-5xl font-extrabold uppercase tracking-wide leading-tight text-white">
-              IN INVESTIGATIVE<br />
-              <span className="text-emerald-400">JOURNALISM</span>
-            </div>
-          </div>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-            Leveraging public documents, corporate registries, satellite imagery, and open data to uncover corruption, verify claims, and expose facts across Nigeria and West Africa.
-          </p>
-        </section>
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><div className="grid gap-5 md:grid-cols-3">{principles.map(([icon, title, copy], index) => <article key={title} className="rounded-xl border border-[#1E2638] bg-[#12161F] p-6"><span className="font-mono text-[10px] text-red-400">0{index + 1}</span><i className={`fa-solid ${icon} ml-3 text-sm text-amber-400`} /><h2 className="mt-7 font-editorial text-3xl font-bold text-white">{title}</h2><p className="mt-3 text-sm leading-relaxed text-slate-400">{copy}</p></article>)}</div></section>
 
-        {/* Process */}
-        <section className="space-y-3">
-          <p className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">How We Work</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { icon: "fa-magnifying-glass", label: "Gather Data" },
-              { icon: "fa-shield-halved", label: "Cross-Verify" },
-              { icon: "fa-chart-pie", label: "Analyze" },
-              { icon: "fa-bullhorn", label: "Expose Facts" },
-            ].map(({ icon, label }, i) => (
-              <div key={label} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm text-center">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                  <i className={`fa-solid ${icon} text-emerald-400 text-sm`} />
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-slate-400 font-mono">{i + 1}.</span>
-                  <span className="text-xs font-semibold text-slate-200">{label}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* About */}
-        <section className="space-y-6">
-          <div className="space-y-4 border-l-2 border-emerald-500/40 pl-5">
-            <h2 className="text-lg font-bold text-white">Who We Are</h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              OSINT-NG is an independent investigative journalism organization operating across Nigeria and West Africa. Our analysts, field reporters, and citizen contributors work together to document, verify, and publish security and accountability intelligence in real time.
-            </p>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              We are not affiliated with any government agency, political party, or security apparatus. Our only obligation is to the truth and to the safety of Nigerian communities.
-            </p>
-          </div>
-
-          <div className="space-y-4 border-l-2 border-emerald-500/40 pl-5">
-            <h2 className="text-lg font-bold text-white">Citizen Intelligence</h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              Every Nigerian is a potential source. OSINT-NG gives citizens the platform to submit incident reports, verify what they witness, and contribute to a national intelligence picture — safely and anonymously.
-            </p>
-          </div>
-
-          <div className="space-y-4 border-l-2 border-amber-500/40 pl-5">
-            <h2 className="text-lg font-bold text-white">Reward Program</h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              High-priority reports with verified media evidence may qualify for a ₦500 reward. Submit a report, save your claim code, and redeem via your account dashboard when selected.
-            </p>
-          </div>
-        </section>
-
-        {/* Contact */}
-        <section className="bg-black/30 border border-white/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-bold text-white">Contact Our Desk</p>
-            <p className="text-xs text-slate-400 mt-0.5">Tips, press inquiries, or partnership requests.</p>
-          </div>
-          <a
-            href="https://wa.me/2348060760476"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 inline-flex items-center space-x-2 px-5 py-2.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold rounded-xl transition"
-          >
-            <i className="fa-brands fa-whatsapp text-base" />
-            <span>WhatsApp Us</span>
-          </a>
-        </section>
-
-        {/* Footer */}
-        <footer className="text-center text-xs text-slate-600 pb-4 space-y-2">
-          <div className="border-t border-slate-800/60 pt-4 space-y-1">
-            <p className="text-slate-500 text-[11px]">
-              OSINT-NG is a joint initiative of
-            </p>
-            <p className="text-slate-400 font-medium">
-              ReyFund <span className="text-slate-600 font-normal">(Ruach & Zoe Nigeria)</span> &amp; Afribic Alliance
-            </p>
-          </div>
-          <p>© {new Date().getFullYear()} OSINT-NG. All rights reserved.</p>
-          <a href="/" className="text-slate-500 hover:text-emerald-400 transition inline-block">← Back to Feed</a>
-        </footer>
+        <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 sm:px-6 lg:grid-cols-12 lg:px-8"><div className="lg:col-span-7"><p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-red-400">Our work</p><h2 className="mt-3 font-editorial text-4xl font-bold text-white">Accountability begins with good reporting.</h2><div className="mt-6 space-y-4 border-l-2 border-red-600 pl-5 text-sm leading-relaxed text-slate-300"><p>We cover public-interest issues with care, context, and a commitment to accuracy. Our work is independent of government agencies, political parties, and private interests.</p><p>People can share reports and first-hand information with our desk. Community confirmations help show where an issue may need further reporting; they do not replace verification.</p></div></div><aside className="self-start rounded-xl border border-[#1E2638] bg-[#12161F] p-6 lg:col-span-5"><p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">Contact the newsroom</p><p className="mt-4 text-sm leading-relaxed text-slate-400">For tips, press inquiries, or partnership requests, contact the BIOS desk.</p><a href="https://wa.me/2348060760476" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex rounded-lg bg-red-600 px-4 py-3 text-xs font-bold text-white hover:bg-red-700"><i className="fa-brands fa-whatsapp mr-2" /> Contact BIOS</a></aside></section>
       </main>
+
+      <footer className="border-t border-[#1E2638] bg-[#0A0D12] px-4 py-8 text-center font-mono text-[10px] text-slate-500"><p>© {new Date().getFullYear()} BIOS. Independent journalism for Nigeria.</p></footer>
     </div>
   );
 }
